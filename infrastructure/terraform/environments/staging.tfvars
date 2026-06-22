@@ -1,0 +1,9 @@
+environment = "staging"
+azure_region = "eastus"
+aks_vm_size = "Standard_D4s_v3"
+aks_node_count = 3
+aks_autoscale_min = 2
+aks_autoscale_max = 10
+log_retention_days = 30
+enable_monitoring = true
+vault_address = "https://vault.staging.healthcare.local"

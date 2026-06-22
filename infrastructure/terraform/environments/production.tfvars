@@ -1,0 +1,9 @@
+environment = "prod"
+azure_region = "eastus"
+aks_vm_size = "Standard_D8s_v3"
+aks_node_count = 5
+aks_autoscale_min = 5
+aks_autoscale_max = 30
+log_retention_days = 90
+enable_monitoring = true
+vault_address = "https://vault.prod.healthcare.local"
