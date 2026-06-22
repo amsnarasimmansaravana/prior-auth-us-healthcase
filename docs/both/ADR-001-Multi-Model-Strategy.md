@@ -1,3 +1,13 @@
+---
+title: Adr 001 Multi Model Strategy
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # ADR-001: Multi-Model LLM Strategy for AI Agent Fabric
 
 **Status**: Accepted  

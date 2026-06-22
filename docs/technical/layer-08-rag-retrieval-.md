@@ -1,3 +1,13 @@
+---
+title: Layer 08 Rag Retrieval
+status: draft
+owner: TODO
+type: technical
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Layer 8: RAG Retrieval Layer
 ## Hybrid Retrieval - Vector, BM25 & Graph - Healthcare Insurance PA Platform
 

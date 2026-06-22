@@ -1,3 +1,13 @@
+---
+title: Readme
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Healthcare Insurance Multi-Agent AI Platform
 ## Prior Authorization (PA) Use Case - Enterprise Architecture
 

@@ -1,3 +1,13 @@
+---
+title: Content Enhancement Map
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Content Enhancement Map
 ## Healthcare Insurance Multi-Agent AI Platform - ChatGPT Conversation Integration
 

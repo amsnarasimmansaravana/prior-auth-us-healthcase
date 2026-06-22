@@ -1,3 +1,13 @@
+---
+title: 03 Policy Service
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Policy Service - Comprehensive Documentation
 
 ## Plan Policy & Configuration Service

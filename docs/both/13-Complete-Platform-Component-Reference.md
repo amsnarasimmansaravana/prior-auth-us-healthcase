@@ -1,3 +1,13 @@
+---
+title: 13 Complete Platform Component Reference
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Healthcare PA Platform — Complete Component, Flow & Use Case Reference
 
 > **See also:** For maximum depth with **275 explicit connections** and per-component inbound/outbound maps, use [`13-Deep-Component-Connection-Reference.md`](./13-Deep-Component-Connection-Reference.md) (8,900+ lines).

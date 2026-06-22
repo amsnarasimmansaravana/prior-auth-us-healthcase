@@ -1,3 +1,13 @@
+---
+title: Layer 05 Governance Detailed
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Layer 5: Governance Layer
 ## Agent Registry, Prompt Management & Safety Evaluation - Healthcare Insurance PA Platform
 

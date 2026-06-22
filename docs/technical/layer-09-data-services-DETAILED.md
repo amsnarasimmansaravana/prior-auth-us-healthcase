@@ -1,3 +1,13 @@
+---
+title: Layer 09 Data Services Detailed
+status: draft
+owner: TODO
+type: technical
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Layer 9: Data Services Layer
 ## 8 Domain Microservices - Healthcare Insurance PA Platform
 

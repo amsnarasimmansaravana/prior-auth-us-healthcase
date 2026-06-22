@@ -1,3 +1,13 @@
+---
+title: Verification Report
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Documentation Alignment Verification Report
 ## Healthcare PA Platform - Code to Flow Diagram Conversion
 

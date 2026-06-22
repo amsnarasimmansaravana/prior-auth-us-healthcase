@@ -1,3 +1,13 @@
+---
+title: Documentation Summary
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Healthcare PA Platform - Complete Documentation Package
 ## Comprehensive Technical Documentation & Implementation Guide
 

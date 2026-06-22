@@ -1,3 +1,13 @@
+---
+title: 03 Benefits Agent
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Benefits Agent - Comprehensive Documentation
 
 ## Coverage Determination & Benefit Validation Agent

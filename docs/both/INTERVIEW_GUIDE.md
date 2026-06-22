@@ -1,3 +1,13 @@
+---
+title: Interview Guide
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Healthcare Insurance PA Platform - Interview Guide
 ## Comprehensive Technical & Business Architecture Guide (End-to-End)
 

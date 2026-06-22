@@ -1,3 +1,13 @@
+---
+title: 11 Com Agent
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Coordination of Benefits (COB) Agent - Comprehensive Documentation
 
 ## Multi-Payer Coordination Agent

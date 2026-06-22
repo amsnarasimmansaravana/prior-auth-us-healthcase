@@ -1,3 +1,13 @@
+---
+title: Layer 02 Api Gateway
+status: draft
+owner: TODO
+type: technical
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Layer 2: API Gateway Layer
 ## Kong Enterprise - 10 Gateway Types - Healthcare Insurance PA Platform
 

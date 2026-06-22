@@ -1,3 +1,13 @@
+---
+title: 13 Deep Component Connection Reference
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Healthcare PA Platform — Deep Component & Connection Reference (v3.2)
 
 > **Source of truth:** `plantuml/13-microservice-workflow-architecture.puml` (5,637 lines)

@@ -1,3 +1,13 @@
+---
+title: 07 Decision Agent
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Decision Agent - Comprehensive Documentation
 
 ## Final Decision Aggregation & Routing Agent

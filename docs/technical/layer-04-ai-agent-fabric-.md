@@ -1,3 +1,13 @@
+---
+title: Layer 04 Ai Agent Fabric
+status: draft
+owner: TODO
+type: technical
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Layer 4: AI Agent Fabric Layer
 ## 11 AI Agents with LLM Orchestration - Healthcare Insurance PA Platform
 

@@ -1,3 +1,13 @@
+---
+title: 60 Gateway Genai Orchestration Architecture
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # 60-Gateway GenAI Orchestration Architecture
 ## Healthcare Prior Authorization Platform - Kong Enterprise + LiteLLM Backbone
 

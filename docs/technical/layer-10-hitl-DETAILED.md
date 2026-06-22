@@ -1,3 +1,13 @@
+---
+title: Layer 10 Hitl Detailed
+status: draft
+owner: TODO
+type: technical
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Layer 10: HITL (Human-in-the-Loop) Layer
 ## Risk-Based Human Review & Approval - Healthcare Insurance PA Platform
 

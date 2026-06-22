@@ -1,3 +1,13 @@
+---
+title: Layer 06 Mcp Detailed
+status: draft
+owner: TODO
+type: technical
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Layer 6: MCP (Model Context Protocol) Layer
 ## Tool Registry & Sandboxed Execution - Healthcare Insurance PA Platform
 

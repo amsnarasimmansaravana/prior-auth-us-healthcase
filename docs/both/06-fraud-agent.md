@@ -1,3 +1,13 @@
+---
+title: 06 Fraud Agent
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Fraud Detection Agent - Comprehensive Documentation
 
 ## Fraud, Waste, & Abuse Detection Agent

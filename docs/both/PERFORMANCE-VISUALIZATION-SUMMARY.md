@@ -1,3 +1,13 @@
+---
+title: Performance Visualization Summary
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Performance Optimization Visualization Summary
 
 **Date:** 2026-06-10  

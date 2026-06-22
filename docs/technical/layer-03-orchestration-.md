@@ -1,3 +1,13 @@
+---
+title: Layer 03 Orchestration
+status: draft
+owner: TODO
+type: technical
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Layer 3: Orchestration Layer
 ## LangGraph + Temporal Workflow Engine - Healthcare Insurance PA Platform
 

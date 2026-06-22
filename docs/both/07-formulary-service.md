@@ -1,3 +1,13 @@
+---
+title: 07 Formulary Service
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Formulary Service - Comprehensive Documentation
 
 ## Prescription Drug Formulary Service

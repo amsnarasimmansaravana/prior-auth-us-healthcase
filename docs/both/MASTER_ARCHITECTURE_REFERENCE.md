@@ -1,3 +1,13 @@
+---
+title: Master Architecture Reference
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Healthcare Prior Authorization Platform - Master Architecture Reference (v3.0)
 
 This document provides the definitive technical specification for the Healthcare Prior Authorization (PA) platform, synthesized from the 5,637-line master architectural diagram (v3.0, Release 2026-06-08).

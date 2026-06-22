@@ -1,3 +1,13 @@
+---
+title: 05 Deployment Operations Runbook
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Enterprise Healthcare Insurance Multi-Agent AI Platform
 ## Part 5: Deployment & Operations Runbook
 

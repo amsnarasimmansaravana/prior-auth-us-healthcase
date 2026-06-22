@@ -1,3 +1,13 @@
+---
+title: 06 Complete Microservice Architecture
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Complete Microservice Architecture
 ## Healthcare Insurance Multi-Agent AI Platform - End-to-End Implementation Guide
 

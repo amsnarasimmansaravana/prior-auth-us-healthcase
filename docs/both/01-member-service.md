@@ -1,3 +1,13 @@
+---
+title: 01 Member Service
+status: draft
+owner: TODO
+type: both
+last_updated: 2026-06-22
+version: 1.0.0
+tags: []
+---
+
 # Member Service - Comprehensive Documentation
 
 ## Member Enrollment & Demographics Service
