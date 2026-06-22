@@ -1,9 +1,7 @@
-'''
 ' Title: Healthcare Microservice Workflow Architecture (Enterprise)
 ' Last-Updated: 2026-06-22
 ' Notes: Non-intrusive metadata header added by automation. No functional changes.
-'''
-@startuml 13-microservice-workflow-architecture
+@startuml
 !theme aws-orange
 scale 0.125
 skinparam linetype ortho
