@@ -1,0 +1,53 @@
+name: Docs Validation
+
+on:
+  push:
+    paths:
+      - 'docs/**'
+      - 'agents/**'
+      - 'services/**'
+      - '.github/workflows/**'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'agents/**'
+      - 'services/**'
+
+jobs:
+  markdown-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install markdownlint-cli & markdown-link-check
+        run: |
+          npm install -g markdownlint-cli markdown-link-check
+      - name: Run markdownlint
+        run: |
+          markdownlint "**/*.md" -i "node_modules" || true
+      - name: Run markdown-link-check
+        run: |
+          # check all md files under docs, agents, services
+          for f in $(git ls-files "docs/**/*.md" "agents/**/*.md" "services/**/*.md"); do
+            echo "Checking links in $f";
+            markdown-link-check -q "$f" || true;
+          done
+  python-inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Run inventory script
+        run: |
+          python3 tools/inventory.py
+      - name: Upload inventory as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: inventory_suggestion
+          path: docs/inventory_suggestion.csv
