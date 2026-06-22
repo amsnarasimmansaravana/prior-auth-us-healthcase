@@ -1,0 +1,86 @@
+@startuml
+!theme plain
+title Ollama GPU Tuning Strategy - Memory & Throughput Optimization
+
+left to right direction
+
+rectangle "BEFORE OPTIMIZATION" as Before #FFE6E6 {
+  node "GPU 0 (48GB)" {
+    component "llama3.3\n(45GB f32)" as L33_Before
+  }
+  node "GPU 1 (48GB)" {
+    component "qwen3\n(42GB f32)" as QW_Before
+  }
+  component "CPU Fallback" as CPU_Before
+  note bottom of CPU_Before
+    GPU OOM
+    3-4x slower
+    Inference: 980ms → 3200ms
+  end note
+  
+  L33_Before -[red,thickness=3]down-> CPU_Before
+  QW_Before -[red,thickness=3]down-> CPU_Before
+}
+
+rectangle "AFTER OPTIMIZATION" as After #E6FFE6 {
+  node "GPU 0 (48GB)" {
+    component "llama3.3 (q5_k_m)\n15GB + Attention Cache\n3GB\n────────\n18GB total" as L33_After
+    component "gemma (q4_0)\n3GB" as Gemma
+  }
+  node "GPU 1 (48GB)" {
+    component "qwen3 (q4_k_m)\n12GB + Attention Cache\n2GB\n────────\n14GB total" as QW_After
+    component "Buffer Pool\n14GB available" as Buffer
+  }
+  
+  note bottom of L33_After
+    All models fit in GPU
+    No CPU fallback
+    Inference: 980ms → 620ms
+  end note
+}
+
+before -[hidden]- after
+
+rectangle "QUANTIZATION IMPACT" as Quant {
+  component "llama3.3" as L33_Quant
+  component "q5_k_m" as Q5
+  component "Quality: 98%\nSize: -80%\nSpeed: +30%" as Q5_Impact
+  
+  component "qwen3" as QW_Quant
+  component "q4_k_m" as Q4
+  component "Quality: 95%\nSize: -85%\nSpeed: +50%" as Q4_Impact
+  
+  component "gemma" as GM_Quant
+  component "q4_0" as Q0
+  component "Quality: 92%\nSize: -87%\nSpeed: +60%" as Q0_Impact
+  
+  L33_Quant --> Q5
+  Q5 --> Q5_Impact
+  
+  QW_Quant --> Q4
+  Q4 --> Q4_Impact
+  
+  GM_Quant --> Q0
+  Q0 --> Q0_Impact
+}
+
+rectangle "BATCHING & THROUGHPUT" as Batch {
+  component "Request Queue" as ReqQ
+  component "100ms Batch Window" as Window
+  component "Requests Processed\nin Parallel" as Parallel
+  
+  ReqQ --> Window
+  Window --> Parallel
+  
+  note right of Parallel
+    Request 1-3: 1100ms total
+    (366ms avg per request)
+    
+    Throughput: 2.6 req/sec
+    (vs 1 req/sec sequential)
+  end note
+}
+
+quant -[hidden]- batch
+
+@enduml

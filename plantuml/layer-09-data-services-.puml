@@ -1,0 +1,54 @@
+@startuml layer-09-data-services-layer
+!theme aws-orange
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 100
+skinparam ranksep 80
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontSize 11
+skinparam componentFontSize 10
+
+title <size:18><b>Layer 9: Data Services Layer</b></size>\n<size:14>8 Domain Microservices with Database Access | 3.5M+ API calls/day</size>\n\n
+
+rectangle "**LAYER 9: DATA SERVICES LAYER**" as Layer9 #E3F2FD {
+    
+    component "member-service\n(FastAPI)" as member_service #3498DB
+    component "provider-service\n(FastAPI)" as provider_service #3498DB
+    component "policy-service\n(FastAPI)" as policy_service #3498DB
+    component "claims-service\n(FastAPI)" as claims_service #3498DB
+    
+    note right
+      <b>8 Services</b>
+      3.5M+ API calls/day
+      25-120ms per query
+    end note
+}
+
+database "PostgreSQL" as DB #E74C3C
+database "Redis" as Cache #FF7043
+
+' Connections
+Layer9 -[#0066CC,thickness=2]down-> DB : <b>Data Access</b>
+Layer9 -[#666666,dashed]down-> Cache : <b>Caching</b>
+
+note top of Layer9
+  <b>LAYER 9 METRICS</b>
+  • Services: 8
+  • Volume: 3.5M+ API calls/day
+  • Latency: 25-120ms per query
+  • Tech: FastAPI, gRPC, PostgreSQL, Redis Cache
+end note
+
+legend bottom right
+  <b>Layer 9: Data Services Layer</b>
+  
+  Services: 8
+  Technology: FastAPI, gRPC, PostgreSQL, Redis Cache
+  Volume: 3.5M+ API calls/day
+  Performance: 25-120ms per query
+  
+  Generated: June 02, 2026
+endlegend
+
+@enduml

@@ -1,0 +1,88 @@
+@startuml Multi-Agent Orchestration - LangGraph Supervisor Pattern
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Arial
+skinparam ArrowColor #333333
+skinparam linetype ortho
+
+title Healthcare Insurance Multi-Agent AI Platform\nLangGraph Supervisor Orchestration Pattern\n(Prior Authorization Workflow)
+
+rectangle "START" as START #E8F5E9
+rectangle "Intake Agent" as INTAKE #E3F2FD
+rectangle "Eligibility Agent" as ELIGIBILITY #FFF3E0
+rectangle "Benefits Agent" as BENEFITS #FCE4EC
+rectangle "Parallel Review\n(Clinical + Policy + Fraud)" as PARALLEL #F3E5F5
+rectangle "Decision Agent" as DECISION #FFEBEE
+rectangle "HITL Review" as HITL #FFF9C4
+rectangle "Notification Agent" as NOTIFY #E1F5FE
+rectangle "END" as END #C8E6C9
+
+START --> INTAKE : app.ainvoke(PARequest)
+INTAKE --> ELIGIBILITY : intake_complete
+ELIGIBILITY --> BENEFITS : eligible
+ELIGIBILITY --> END : not_eligible
+BENEFITS --> PARALLEL : covered
+BENEFITS --> END : not_covered
+PARALLEL --> DECISION : merge_results
+DECISION --> NOTIFY : confidence >= 0.85
+DECISION --> HITL : confidence < 0.85
+HITL --> NOTIFY : reviewer_completed
+NOTIFY --> END
+
+note right of INTAKE
+  Intake processing
+  - document classification
+  - OCR extraction
+  - entity extraction
+  - validation
+end note
+
+note right of ELIGIBILITY
+  Eligibility checks
+  - active member status
+  - coverage date validation
+  - COB checks
+end note
+
+note right of PARALLEL
+  Parallel execution block
+  - clinical review with RAG
+  - policy compliance checks
+  - fraud risk scoring
+end note
+
+note right of DECISION
+  Decision routing
+  - approve or deny when confident
+  - send to HITL when low confidence
+end note
+
+rectangle "Shared PAState" as STATE #E0F2F1 {
+}
+
+STATE .. INTAKE
+STATE .. ELIGIBILITY
+STATE .. BENEFITS
+STATE .. PARALLEL
+STATE .. DECISION
+STATE .. HITL
+STATE .. NOTIFY
+
+note bottom of STATE
+  Shared state keys
+  - request and case_id
+  - intake, eligibility, benefits outputs
+  - clinical, policy, fraud outputs
+  - decision and optional HITL result
+  - append-only messages for audit trail
+end note
+
+legend bottom right
+  Workflow profile
+  - throughput: 50,000 workflows/day
+  - simple: 2-3 min
+  - standard: 5-8 min
+  - complex: 15-30 min
+  - SLA: 30 min with checkpointing
+endlegend
+
+@enduml

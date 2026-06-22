@@ -1,0 +1,67 @@
+@startuml layer-04-ai-agent-fabric-layer
+!theme aws-orange
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 100
+skinparam ranksep 80
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontSize 11
+skinparam componentFontSize 10
+
+title <size:18><b>Layer 4: AI Agent Fabric Layer</b></size>\n<size:14>11 AI Agents with LLM Orchestration | 385,000 agent executions/day</size>\n\n
+
+cloud "API Gateway Layer" as APIGW #FFF8DC
+hexagon "Kong AI Gateway\n(Security + Governance)" as KONGGW #F39C12
+hexagon "LiteLLM Gateway\n(Routing + Fallback)" as LITELLMGW #F39C12
+
+rectangle "**LAYER 4: AI AGENT FABRIC LAYER**" as Layer4 #F5E6FF {
+    
+    component "intake-agent\n(GPT-4o)" as intake_agent #9B59B6
+    component "eligibility-agent\n(GPT-4o)" as eligibility_agent #9B59B6
+    component "benefits-agent\n(GPT-4o)" as benefits_agent #9B59B6
+    component "clinical-agent\n(GPT-4o)" as clinical_agent #9B59B6
+    
+    note right
+      <b>11 Services</b>
+      385,000 agent executions/day
+      1.2s - 8.3s per agent
+    end note
+}
+
+database "PostgreSQL" as DB #E74C3C
+database "Redis" as Cache #FF7043
+
+' Connections
+APIGW -[#0066CC,thickness=2]down-> KONGGW : <b>Inbound Traffic</b>
+KONGGW -[#0066CC,thickness=2]down-> LITELLMGW : <b>Policy + Routing</b>
+LITELLMGW -[#0066CC,thickness=2]down-> Layer4 : <b>Model Responses</b>
+Layer4 -[#0066CC,thickness=2]down-> DB : <b>Data Access</b>
+Layer4 -[#666666,dashed]down-> Cache : <b>Caching</b>
+
+note right of KONGGW
+  <b>Gateway Split</b>
+  • Kong AI Gateway: security, governance, audit, quotas
+  • LiteLLM Gateway: model routing, fallback, cost optimization
+end note
+
+note top of Layer4
+  <b>LAYER 4 METRICS</b>
+  • Services: 11
+  • Volume: 385,000 agent executions/day
+  • Latency: 1.2s - 8.3s per agent
+  • Tech: GPT-4o, Claude 3.5, GPT-3.5 Turbo, LangGraph
+end note
+
+legend bottom right
+  <b>Layer 4: AI Agent Fabric Layer</b>
+  
+  Services: 11
+  Technology: GPT-4o, Claude 3.5, GPT-3.5 Turbo, LangGraph
+  Volume: 385,000 agent executions/day
+  Performance: 1.2s - 8.3s per agent
+  
+  Generated: June 02, 2026
+endlegend
+
+@enduml

@@ -1,0 +1,410 @@
+@startuml CI-CD Deployment Pipeline
+!include <C4/C4_Component>
+
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Arial
+skinparam ArrowColor #333333
+
+title Healthcare Insurance Multi-Agent AI Platform\nCI/CD Production Deployment Pipeline\n(GitHub Actions - Automated Deployment)
+
+|GitHub|
+start
+
+:Developer pushes code\nto main branch;
+note right
+  **Trigger Events:**
+  • Push to main
+  • Pull request merge
+  • Manual workflow_dispatch
+  • Scheduled: Daily 2 AM
+end note
+
+|GitHub Actions - Security Scan Job|
+:Checkout code;
+
+fork
+  :**Secret Scanning**\n(GitGuardian);
+  note right
+    Detect exposed:
+    • API keys
+    • Database passwords
+    • Azure credentials
+    • SSH keys
+  end note
+fork again
+  :**SAST - Static Analysis**\n(SonarQube);
+  note right
+    Code quality:
+    • Code smells
+    • Security vulnerabilities
+    • Code coverage
+    • Duplicate code
+  end note
+fork again
+  :**Dependency Scanning**\n(Snyk, Dependabot);
+  note right
+    Check for:
+    • CVE vulnerabilities
+    • Outdated packages
+    • License compliance
+    • Supply chain risks
+  end note
+fork again
+  :**Container Scanning**\n(Trivy);
+  note right
+    Scan images for:
+    • OS vulnerabilities
+    • Application CVEs
+    • Misconfigurations
+    • Secrets in layers
+  end note
+end fork
+
+if (Security scan passed?) then (yes)
+  :✓ Security approved;
+else (no)
+  :✗ Block deployment;
+  stop
+endif
+
+|GitHub Actions - Build & Test Job|
+:Run unit tests\n(pytest, Jest);
+note right
+  **Test Coverage:**
+  • Unit tests: 500+ tests
+  • Integration tests: 150+ tests
+  • E2E tests: 50+ tests
+  
+  **Coverage Target:** >85%
+  **Time:** ~15 minutes
+end note
+
+fork
+  :**Backend Tests**\n(Python/FastAPI);
+  note right
+    Test suites:
+    • Agent logic
+    • RAG pipeline
+    • API endpoints
+    • Database models
+  end note
+fork again
+  :**Frontend Tests**\n(React/Jest);
+  note right
+    Test suites:
+    • Component tests
+    • Integration tests
+    • Snapshot tests
+  end note
+fork again
+  :**LLM Tests**\n(Eval framework);
+  note right
+    Test:
+    • Prompt regression
+    • Output validation
+    • Hallucination detection
+    • Tool calling accuracy
+  end note
+end fork
+
+if (All tests passed?) then (yes)
+  :✓ Tests passed;
+else (no)
+  :✗ Block deployment;
+  stop
+endif
+
+:Build Docker images;
+note right
+  **Images Built:**
+  • clinical-agent:v2.3.1
+  • intake-agent:v1.8.2
+  • policy-agent:v2.1.0
+  • fraud-agent:v1.9.5
+  • decision-agent:v2.0.3
+  
+  **Build Optimization:**
+  • Multi-stage builds
+  • Layer caching
+  • Minimal base images
+  
+  **Time:** ~10 minutes
+end note
+
+|GitHub Actions - Push to ACR Job|
+:Tag images with\nversion + SHA;
+note right
+  **Tagging Strategy:**
+  • v2.3.1 (semantic version)
+  • sha-abc1234 (git commit)
+  • latest (most recent)
+  • staging (for staging env)
+  
+  **Example:**
+  acrhealthcare.azurecr.io/
+    clinical-agent:v2.3.1
+end note
+
+:Push to Azure Container Registry;
+note right
+  **Registry:**
+  acrhealthcareprod.azurecr.io
+  
+  **Security:**
+  • Admin account disabled
+  • Service principal auth
+  • Image signing enabled
+  • Vulnerability scanning
+  
+  **Retention:** 90 days for old tags
+end note
+
+:Scan images in ACR\n(Azure Defender);
+note right
+  **Defender for Containers:**
+  • Continuous scanning
+  • CVE detection
+  • Compliance checks
+  • Alert on HIGH/CRITICAL
+end note
+
+if (ACR scan clean?) then (yes)
+  :✓ Images approved;
+else (no)
+  :✗ Block deployment;
+  stop
+endif
+
+|GitHub Actions - Deploy to Staging|
+:Update Helm values\n(staging.yaml);
+note right
+  **Staging Config:**
+  • replicas: 2 (vs 10 prod)
+  • resources: 50% of prod
+  • ingress: staging.healthcare.internal
+  • database: staging DB
+end note
+
+:Helm upgrade\nstaging release;
+note right
+  **Helm Command:**
+  helm upgrade healthcare-platform ./charts \
+    --namespace healthcare-staging \
+    --values staging.yaml \
+    --wait --timeout 10m
+  
+  **Deployment Strategy:** RollingUpdate
+  **Max Unavailable:** 25%
+  **Max Surge:** 25%
+end note
+
+:Wait for rollout\ncomplete;
+note right
+  **Health Checks:**
+  • Readiness probe: /health
+  • Liveness probe: /healthz
+  • Startup probe: /startup
+  
+  **Timeout:** 10 minutes
+end note
+
+:Run smoke tests\non staging;
+note right
+  **Smoke Tests:**
+  • API health check
+  • Database connectivity
+  • Agent initialization
+  • Critical user flows
+  
+  **Time:** ~5 minutes
+end note
+
+if (Staging tests passed?) then (yes)
+  :✓ Staging validated;
+else (no)
+  :✗ Rollback staging;
+  stop
+endif
+
+|GitHub Actions - Deploy to Production|
+:⏸️ Wait for manual approval;
+note right
+  **Approval Gate:**
+  • Environment: production
+  • Approvers: 
+    - Tech Lead
+    - DevOps Lead
+    - Product Owner (1 required)
+  
+  **Review Checklist:**
+  ✓ All tests passed
+  ✓ Security scans clean
+  ✓ Staging deployment successful
+  ✓ Change ticket approved
+end note
+
+if (Approved?) then (yes)
+  :✓ Deployment approved;
+else (no)
+  :✗ Deployment cancelled;
+  stop
+endif
+
+fork
+  |Primary Region - East US 2|
+  :Update Helm values\n(prod-east.yaml);
+  
+  :Canary deployment\n(10% traffic);
+  note right
+    **Canary Strategy:**
+    • Step 1: 10% traffic (5 min)
+    • Monitor: error rate, latency
+    • Step 2: 50% traffic (10 min)
+    • Monitor: business metrics
+    • Step 3: 100% traffic
+  end note
+  
+  :Monitor canary metrics;
+  note right
+    **Success Criteria:**
+    • Error rate < 1%
+    • P95 latency < 3s
+    • No critical alerts
+    
+    **Auto-rollback if:**
+    • Error rate > 5%
+    • P95 latency > 10s
+    • Critical alerts fired
+  end note
+  
+  if (Canary successful?) then (yes)
+    :Promote to 100%;
+  else (no)
+    :Auto-rollback;
+    stop
+  endif
+  
+  :Helm upgrade production\n(East US 2);
+  note right
+    **Production Deployment:**
+    helm upgrade healthcare-platform ./charts \
+      --namespace healthcare-prod \
+      --values prod-east.yaml \
+      --wait --timeout 15m
+    
+    **Replicas:**
+    • clinical-agent: 10
+    • intake-agent: 8
+    • policy-agent: 5
+    • fraud-agent: 6
+    • decision-agent: 4
+  end note
+  
+  :Verify production\nhealth (East);
+
+fork again
+  |Secondary Region - West US 2|
+  :Wait 10 minutes\n(stagger deployment);
+  
+  :Update Helm values\n(prod-west.yaml);
+  
+  :Helm upgrade production\n(West US 2);
+  note right
+    **Secondary Region:**
+    • Same configuration as East
+    • Traffic Manager: Priority 2
+    • Active-Active setup
+    • Auto-failover enabled
+  end note
+  
+  :Verify production\nhealth (West);
+end fork
+
+|GitHub Actions - Post-Deployment|
+:Run integration tests\non production;
+note right
+  **Integration Tests:**
+  • End-to-end PA workflow
+  • API contract tests
+  • Performance tests
+  • Multi-region failover
+  
+  **Time:** ~10 minutes
+end note
+
+if (Integration tests passed?) then (yes)
+  :✓ Deployment successful;
+else (no)
+  :✗ Trigger rollback;
+  |Rollback Procedure|
+  fork
+    :Rollback East US 2;
+    note right
+      helm rollback healthcare-platform \
+        --namespace healthcare-prod
+      
+      Reverts to previous release
+      Time: ~2 minutes
+    end note
+  fork again
+    :Rollback West US 2;
+  end fork
+  stop
+endif
+
+:Update deployment status;
+note right
+  **Status Updates:**
+  • GitHub deployment status
+  • Azure DevOps board
+  • Slack notification
+  • Email to stakeholders
+end note
+
+:Tag GitHub release;
+note right
+  **Release Tag:**
+  • v2.3.1
+  • Changelog auto-generated
+  • Release notes
+  • Deployment timestamp
+end note
+
+|Notification|
+fork
+  :Slack notification\n#deployments;
+  note right
+    **Message:**
+    🚀 Production deployment successful
+    
+    Version: v2.3.1
+    Regions: East US 2, West US 2
+    Deployer: @john.doe
+    Duration: 45 minutes
+    
+    Tests: ✅ All passed
+    Health: ✅ All green
+  end note
+fork again
+  :Email to stakeholders;
+fork again
+  :Azure DevOps work item\nupdate;
+end fork
+
+stop
+
+note right
+  **Deployment Metrics:**
+  • Frequency: 3-5 per week
+  • Success rate: 98.5%
+  • Average duration: 45 minutes
+  • Rollback rate: 1.5%
+  • MTTR (rollback): 5 minutes
+  
+  **SLO:**
+  • Deployment success: >95%
+  • Zero downtime: 100%
+  • Rollback time: <10 minutes
+end note
+
+@enduml

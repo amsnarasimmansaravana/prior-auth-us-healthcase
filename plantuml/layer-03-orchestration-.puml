@@ -1,0 +1,53 @@
+@startuml layer-03-orchestration-layer
+!theme aws-orange
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 100
+skinparam ranksep 80
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontSize 11
+skinparam componentFontSize 10
+
+title <size:18><b>Layer 3: Orchestration Layer</b></size>\n<size:14>LangGraph + Temporal Workflow Engine | 50,000 workflows/day</size>\n\n
+
+rectangle "**LAYER 3: ORCHESTRATION LAYER**" as Layer3 #E6F7FF {
+    
+    component "workflow-engine-svc\n(LangGraph 0.2)" as workflow_engine_svc #4A90E2
+    component "temporal-server\n(LangGraph 0.2)" as temporal_server #4A90E2
+    component "state-manager-svc\n(LangGraph 0.2)" as state_manager_svc #4A90E2
+    
+    note right
+      <b>3 Services</b>
+      50,000 workflows/day
+      <5ms state operations
+    end note
+}
+
+database "PostgreSQL" as DB #E74C3C
+database "Redis" as Cache #FF7043
+
+' Connections
+Layer3 -[#0066CC,thickness=2]down-> DB : <b>Data Access</b>
+Layer3 -[#666666,dashed]down-> Cache : <b>Caching</b>
+
+note top of Layer3
+  <b>LAYER 3 METRICS</b>
+  • Services: 3
+  • Volume: 50,000 workflows/day
+  • Latency: <5ms state operations
+  • Tech: LangGraph 0.2, Temporal.io 1.22, Python 3.11
+end note
+
+legend bottom right
+  <b>Layer 3: Orchestration Layer</b>
+  
+  Services: 3
+  Technology: LangGraph 0.2, Temporal.io 1.22, Python 3.11
+  Volume: 50,000 workflows/day
+  Performance: <5ms state operations
+  
+  Generated: June 02, 2026
+endlegend
+
+@enduml

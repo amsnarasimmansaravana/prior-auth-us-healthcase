@@ -1,0 +1,54 @@
+@startuml layer-02-api-gateway-layer
+!theme aws-orange
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 100
+skinparam ranksep 80
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontSize 11
+skinparam componentFontSize 10
+
+title <size:18><b>Layer 2: API Gateway Layer</b></size>\n<size:14>Kong Enterprise - 10 Gateway Types | 3.5M+ API calls/day</size>\n\n
+
+rectangle "**LAYER 2: API GATEWAY LAYER**" as Layer2 #FFF8DC {
+    
+    component "auth-gateway\n(Kong Enterprise 3.4)" as auth_gateway #F39C12
+    component "rate-limit-gateway\n(Kong Enterprise 3.4)" as rate_limit_gateway #F39C12
+    component "llm-gateway\n(Kong Enterprise 3.4)" as llm_gateway #F39C12
+    component "vector-gateway\n(Kong Enterprise 3.4)" as vector_gateway #F39C12
+    
+    note right
+      <b>10 Services</b>
+      3.5M+ API calls/day
+      <50ms total overhead
+    end note
+}
+
+database "PostgreSQL" as DB #E74C3C
+database "Redis" as Cache #FF7043
+
+' Connections
+Layer2 -[#0066CC,thickness=2]down-> DB : <b>Data Access</b>
+Layer2 -[#666666,dashed]down-> Cache : <b>Caching</b>
+
+note top of Layer2
+  <b>LAYER 2 METRICS</b>
+  • Services: 10
+  • Volume: 3.5M+ API calls/day
+  • Latency: <50ms total overhead
+  • Tech: Kong Enterprise 3.4, Lua Plugins, Redis
+end note
+
+legend bottom right
+  <b>Layer 2: API Gateway Layer</b>
+  
+  Services: 10
+  Technology: Kong Enterprise 3.4, Lua Plugins, Redis
+  Volume: 3.5M+ API calls/day
+  Performance: <50ms total overhead
+  
+  Generated: June 02, 2026
+endlegend
+
+@enduml

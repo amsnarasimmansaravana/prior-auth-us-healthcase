@@ -1,0 +1,433 @@
+@startuml Agent-to-Agent Protocol Specification
+!include <C4/C4_Component>
+
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Arial
+skinparam SequenceMessageAlign center
+
+title Healthcare Insurance Multi-Agent AI Platform\nAgent-to-Agent (A2A) Communication Protocol\n(Secure, Observable, Governed Message Exchange)
+
+participant "Clinical Agent\n(Requester)" as Clinical
+participant "Agent Gateway\n(Registry + Router)" as Gateway
+participant "Benefits Agent\n(Provider)" as Benefits
+participant "Observability\n(Tracing)" as Observability
+participant "Audit Log\n(Compliance)" as Audit
+
+== Agent Discovery Phase ==
+
+Clinical -> Gateway : **1. Discovery Request**\n"Which agent handles benefits?"
+note right of Clinical
+  **Discovery Query:**
+  {
+    "capability": "validate_coverage",
+    "service_type": "benefits",
+    "version": "v2.x"
+  }
+end note
+
+Gateway -> Gateway : Query Agent Registry
+note right of Gateway
+  **Agent Registry Query:**
+  
+  SELECT agent_id, endpoints, version, status
+  FROM agent_registry
+  WHERE capability LIKE '%validate_coverage%'
+    AND status = 'ACTIVE'
+    AND version >= 'v2.0'
+  
+  **Result:**
+  {
+    "agent_id": "benefits-agent",
+    "replicas": [
+      "benefits-agent-0.healthcare-prod.svc",
+      "benefits-agent-1.healthcare-prod.svc",
+      "benefits-agent-2.healthcare-prod.svc"
+    ],
+    "version": "v2.1.0",
+    "status": "HEALTHY",
+    "load": [60%, 45%, 70%]
+  }
+end note
+
+Gateway --> Clinical : **2. Discovery Response**\nbenefits-agent (replica-1)
+note left of Gateway
+  **Load Balancing Decision:**
+  • replica-0: 60% load
+  • replica-1: 45% load ✓ Selected
+  • replica-2: 70% load
+  
+  **Selection:** Least loaded replica
+end note
+
+== Message Preparation Phase ==
+
+Clinical -> Clinical : Prepare A2A Message
+note right of Clinical
+  **A2A Message Structure:**
+  {
+    "message_id": "msg-abc-123",
+    "correlation_id": "PA-2026-001234",
+    "source_agent": {
+      "agent_id": "clinical-agent",
+      "instance_id": "clinical-agent-5",
+      "version": "v2.3.1"
+    },
+    "target_agent": {
+      "agent_id": "benefits-agent",
+      "instance_id": "benefits-agent-1"
+    },
+    "message_type": "REQUEST",
+    "priority": "NORMAL",
+    "timestamp": "2026-06-01T10:30:00Z",
+    "ttl_ms": 30000,
+    
+    "payload": {
+      "task": "validate_coverage",
+      "member_id": "M123456",
+      "service_codes": ["97110", "97140"],
+      "service_date": "2026-06-15",
+      "provider_npi": "1234567890"
+    },
+    
+    "security": {
+      "signed": true,
+      "signature": "SHA256-RSA...",
+      "jwt_token": "eyJhbGciOiJSUzI1NiIs...",
+      "tenant_id": "payer-a"
+    },
+    
+    "observability": {
+      "trace_id": "trace-xyz-789",
+      "span_id": "span-001",
+      "parent_span_id": "span-supervisor"
+    },
+    
+    "sla": {
+      "timeout_ms": 5000,
+      "retry_policy": "exponential_backoff",
+      "max_retries": 3
+    },
+    
+    "schema_version": "v2.0"
+  }
+  
+  **Message Size:** ~2KB
+end note
+
+== Authentication & Authorization Phase ==
+
+Clinical -> Gateway : **3. Send A2A Request**\n(with JWT token)
+
+Gateway -> Gateway : Validate JWT Token
+note right of Gateway
+  **JWT Validation:**
+  • Signature verification (RS256)
+  • Expiration check
+  • Issuer validation
+  • Audience validation
+  • Custom claims check
+  
+  **JWT Claims:**
+  {
+    "sub": "clinical-agent",
+    "iss": "https://healthcare-auth",
+    "aud": "agent-mesh",
+    "exp": 1717241400,
+    "iat": 1717238000,
+    "roles": ["clinical_reviewer"],
+    "permissions": [
+      "call:benefits-agent",
+      "read:member_data"
+    ]
+  }
+end note
+
+Gateway -> Gateway : Check RBAC Policy
+note right of Gateway
+  **OPA Policy Evaluation:**
+  
+  ```rego
+  allow {
+    input.source == "clinical-agent"
+    input.target == "benefits-agent"
+    input.action == "validate_coverage"
+    "call:benefits-agent" in input.permissions
+  }
+  ```
+  
+  **Result:** ALLOW ✓
+end note
+
+== Schema Validation Phase ==
+
+Gateway -> Gateway : Validate Message Schema
+note right of Gateway
+  **JSON Schema Validation:**
+  
+  Required fields:
+  ✓ message_id
+  ✓ source_agent
+  ✓ target_agent
+  ✓ message_type
+  ✓ payload
+  ✓ security.jwt_token
+  ✓ observability.trace_id
+  
+  Payload schema (validate_coverage):
+  ✓ member_id: string
+  ✓ service_codes: array[string]
+  ✓ service_date: ISO8601
+  ✓ provider_npi: string (10 digits)
+  
+  **Validation:** PASS ✓
+end note
+
+== Observability Injection ==
+
+Gateway -> Observability : **4. Create Span**
+note right of Gateway
+  **OpenTelemetry Span:**
+  {
+    "trace_id": "trace-xyz-789",
+    "span_id": "span-gateway-001",
+    "parent_span_id": "span-001",
+    "operation": "a2a_message_routing",
+    "start_time": "2026-06-01T10:30:00.123Z",
+    "attributes": {
+      "source_agent": "clinical-agent",
+      "target_agent": "benefits-agent",
+      "message_id": "msg-abc-123",
+      "priority": "NORMAL"
+    }
+  }
+end note
+
+Observability --> Gateway : Span created
+
+== Message Routing Phase ==
+
+Gateway -> Benefits : **5. Route Message**\n(to benefits-agent-1)
+note right of Gateway
+  **Routing Decision:**
+  • Target: benefits-agent-1
+  • Protocol: gRPC
+  • Encryption: mTLS
+  • Retry: Enabled
+  • Timeout: 5000ms
+  
+  **Network Path:**
+  clinical-agent-5.healthcare-prod.svc
+    → istio-proxy (mTLS encryption)
+    → istio-ingressgateway
+    → benefits-agent-1.healthcare-prod.svc
+    → istio-proxy (mTLS decryption)
+    → benefits-agent-1 (port 8080)
+end note
+
+== Message Processing Phase ==
+
+Benefits -> Benefits : Process Request
+note left of Benefits
+  **Benefits Agent Processing:**
+  
+  1. Validate input
+  2. Query benefits database
+  3. Check network status
+  4. Validate service limits
+  5. Prepare response
+  
+  **Database Query:**
+  SELECT coverage, limits, network_status
+  FROM benefits
+  WHERE member_id = 'M123456'
+    AND service_code IN ('97110', '97140')
+    AND effective_date <= '2026-06-15'
+  
+  **Processing Time:** 180ms
+end note
+
+Benefits -> Observability : **6. Log Processing**
+note left of Benefits
+  **Processing Telemetry:**
+  {
+    "span_id": "span-benefits-002",
+    "parent_span_id": "span-gateway-001",
+    "operation": "validate_coverage",
+    "duration_ms": 180,
+    "db_query_time_ms": 120,
+    "result": "COVERED"
+  }
+end note
+
+== Response Phase ==
+
+Benefits -> Gateway : **7. Send A2A Response**
+note left of Benefits
+  **A2A Response Message:**
+  {
+    "message_id": "msg-def-456",
+    "correlation_id": "PA-2026-001234",
+    "in_reply_to": "msg-abc-123",
+    "source_agent": "benefits-agent",
+    "target_agent": "clinical-agent",
+    "message_type": "RESPONSE",
+    "timestamp": "2026-06-01T10:30:00.350Z",
+    
+    "payload": {
+      "task": "validate_coverage",
+      "result": "COVERED",
+      "details": {
+        "service_codes": {
+          "97110": {
+            "covered": true,
+            "network": "IN_NETWORK",
+            "copay": "$25",
+            "annual_limit": "$5,000",
+            "remaining": "$4,200"
+          },
+          "97140": {
+            "covered": true,
+            "network": "IN_NETWORK",
+            "copay": "$25",
+            "annual_limit": "$5,000",
+            "remaining": "$4,200"
+          }
+        },
+        "provider_status": "IN_NETWORK"
+      },
+      "confidence": 1.0
+    },
+    
+    "observability": {
+      "trace_id": "trace-xyz-789",
+      "span_id": "span-benefits-002",
+      "processing_time_ms": 180
+    }
+  }
+  
+  **Response Time:** 180ms
+end note
+
+Gateway -> Clinical : **8. Forward Response**
+
+== Audit Logging Phase ==
+
+Gateway -> Audit : **9. Audit Log Entry**
+note right of Audit
+  **HIPAA Audit Log:**
+  {
+    "timestamp": "2026-06-01T10:30:00.350Z",
+    "event_type": "AGENT_TO_AGENT_CALL",
+    "source_agent": "clinical-agent",
+    "target_agent": "benefits-agent",
+    "action": "validate_coverage",
+    "member_id": "M123456",
+    "result": "SUCCESS",
+    "response_time_ms": 180,
+    "trace_id": "trace-xyz-789",
+    "user_session": "session-789",
+    "ip_address": "10.0.1.45",
+    "compliance": {
+      "hipaa_logged": true,
+      "minimum_necessary": true,
+      "authorized": true
+    }
+  }
+  
+  **Retention:** 7 years (HIPAA)
+  **Immutable:** Write-once
+end note
+
+Clinical -> Clinical : Process Response
+note right of Clinical
+  **Response Handling:**
+  
+  1. Validate response signature
+  2. Check correlation_id matches
+  3. Extract coverage details
+  4. Update workflow state
+  5. Continue to next step
+  
+  **State Update:**
+  state["benefits_result"] = {
+    "covered": true,
+    "network": "IN_NETWORK",
+    "copay": "$25",
+    "remaining_limit": "$4,200"
+  }
+  
+  **Next Step:** 
+  Proceed to parallel review
+  (Clinical, Policy, Fraud agents)
+end note
+
+== Error Handling (Alternative Flow) ==
+
+note over Clinical,Benefits
+  **Error Scenarios & Handling:**
+  
+  **1. Timeout (>5000ms):**
+  → Exponential backoff retry
+  → Retry 1: Wait 1s, retry
+  → Retry 2: Wait 2s, retry
+  → Retry 3: Wait 4s, retry
+  → After 3 retries: ESCALATE to human
+  
+  **2. Agent Unavailable:**
+  → Gateway detects unhealthy replica
+  → Route to healthy replica
+  → If all replicas down: Return 503
+  → Circuit breaker: Open for 30s
+  
+  **3. Schema Validation Failure:**
+  → Reject message immediately
+  → Return 400 Bad Request
+  → Log validation errors
+  → No retry (fix required)
+  
+  **4. Authorization Failure:**
+  → Reject with 403 Forbidden
+  → Audit log security event
+  → Alert security team
+  → No retry
+  
+  **5. Processing Error:**
+  → Return 500 Internal Error
+  → Include error details
+  → Retry with backoff
+  → Escalate after max retries
+end note
+
+== Performance Metrics ==
+
+note right of Observability
+  **A2A Protocol Performance:**
+  
+  **Latency Breakdown:**
+  • Gateway validation: 5ms
+  • RBAC check: 3ms
+  • Schema validation: 2ms
+  • Network routing: 10ms
+  • Agent processing: 180ms
+  • Response routing: 10ms
+  **Total:** 210ms (P50)
+  
+  **Success Metrics:**
+  • Success rate: 99.5%
+  • Retry rate: 2.1%
+  • Timeout rate: 0.3%
+  • Auth failures: 0.1%
+  
+  **Daily Volume:**
+  • A2A messages: 500K/day
+  • Peak: 1200 msg/sec
+  • Avg: 350 msg/sec
+  
+  **Protocol Overhead:**
+  • Message size: ~2KB
+  • Network overhead: 15%
+  • Processing overhead: 10ms
+  **Total overhead:** Acceptable ✓
+end note
+
+@enduml

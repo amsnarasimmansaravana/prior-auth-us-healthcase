@@ -1,0 +1,248 @@
+@startuml Prior Authorization Business Workflow
+!define RECTANGLE class
+
+skinparam backgroundColor #FEFEFE
+skinparam handwritten false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+title Healthcare Insurance - Prior Authorization Business Workflow\n(End-to-End Process with AI-Enabled Automation)
+
+|Provider Office|
+start
+:Provider identifies need for\nprior authorization;
+note right
+  **Trigger Events:**
+  * Surgical procedure ordered
+  * Expensive medication prescribed
+  * Imaging study needed (MRI, CT, PET)
+  * Home health services
+  * DME (Durable Medical Equipment)
+end note
+
+:Gather clinical documentation;
+note right
+  **Required Documents:**
+  * Patient demographics
+  * Diagnosis codes (ICD-10)
+  * Procedure codes (CPT/HCPCS)
+  * Clinical notes
+  * Lab results
+  * Imaging reports
+  * Previous treatment history
+end note
+
+:Submit PA request via\nportal/fax/EDI;
+note right
+  **Submission Channels:**
+  * Provider Portal (50%)
+  * Fax (30%)
+  * EDI X12 278 (15%)
+  * Phone (5%)
+end note
+
+|Payer - Intake System|
+:Request received at intake;
+note right
+  **Intake Metrics:**
+  * Volume: 50,000 PAs/day
+  * Peak hours: 9AM-11AM
+  * Average attachment size: 15 pages
+end note
+
+if (Request complete?) then (yes)
+  :Create case in system;
+  :Assign case ID\n(e.g., PA-2026-001234);
+else (no)
+  |Provider Office|
+  :Pend case -\nrequest additional info;
+  stop
+endif
+
+|AI Platform - Intake Agent|
+:OCR & document extraction;
+note right
+  **AI Processing:**
+  * Document classification
+  * Text extraction from faxes
+  * Entity extraction (GPT-4o)
+  * Validation
+  
+  **Time:** 2 minutes
+  **Accuracy:** 98%
+end note
+
+:Extract structured data;
+
+|AI Platform - Eligibility Agent|
+:Check member eligibility;
+note right
+  **Verification:**
+  * Active coverage on service date?
+  * Plan type (HMO, PPO, MA)
+  * Coordination of Benefits (COB)
+  
+  **Time:** 15 seconds
+  **Data Source:** Member DB
+end note
+
+if (Member eligible?) then (yes)
+  :Proceed;
+else (no)
+  |Provider Office|
+  :Deny - member not eligible;
+  stop
+endif
+
+|AI Platform - Benefits Agent|
+:Validate benefits coverage;
+note right
+  **Coverage Check:**
+  * Service covered under plan?
+  * Network provider?
+  * Service limits (annual, lifetime)
+  * Prior authorization required?
+  
+  **Time:** 20 seconds
+end note
+
+if (Service covered?) then (yes)
+  :Proceed;
+else (no)
+  |Provider Office|
+  :Deny - service not covered;
+  stop
+endif
+
+|AI Platform - Parallel Processing|
+fork
+  :Clinical Review Agent;
+  note right
+    **Medical Necessity:**
+    * RAG retrieval from MCG/InterQual
+    * Evidence-based review
+    * Guideline compliance
+    * Clinical reasoning (GPT-4o)
+    
+    **Time:** 3-5 minutes
+    **Accuracy:** 96%
+  end note
+fork again
+  :Policy Agent;
+  note right
+    **Policy Review:**
+    * Plan-specific policies
+    * State regulations
+    * CMS coverage determinations
+    
+    **Time:** 1 minute
+  end note
+fork again
+  :Fraud Detection Agent;
+  note right
+    **Fraud Checks:**
+    * Provider billing patterns
+    * Duplicate requests
+    * Upcoding detection
+    * Graph analysis
+    
+    **Time:** 2 minutes
+    **Fraud savings:** $50M/year
+  end note
+end fork
+
+|AI Platform - Decision Agent|
+:Aggregate all results;
+
+:Calculate confidence score;
+note right
+  **Confidence Scoring:**
+  * All agents agree: 0.95+
+  * Mixed signals: 0.60-0.95
+  * Conflicting: <0.60
+end note
+
+if (Confidence > 95%?) then (yes)
+  if (Auto-adjudication approved?) then (yes)
+    :Auto-approve;
+    note right
+      **Auto-Approval Criteria:**
+      * Low risk
+      * Standard procedure
+      * Amount < $5,000
+      * No fraud flags
+      
+      **Rate:** 72% of cases
+    end note
+  else (no - high value)
+    |Human Reviewer|
+    :Route to clinical reviewer;
+    :Human review & decision;
+    note right
+      **Human Review:**
+      * High-value cases (>$50K)
+      * Experimental treatments
+      * Complex clinical scenarios
+      
+      **Time:** 15 minutes
+      **Rate:** 5% of cases
+    end note
+  endif
+else (no - low confidence)
+  |Human Reviewer|
+  :Route to clinical reviewer;
+  :Human review & decision;
+  note right
+    **Manual Review Cases:**
+    * Conflicting evidence
+    * Off-label use
+    * New/experimental treatments
+    * Appeals
+    
+    **Rate:** 23% of cases
+  end note
+endif
+
+|Notification System|
+:Send decision to provider;
+note right
+  **Notification Channels:**
+  * Portal notification
+  * Fax
+  * EDI 278 response
+  * Email
+  
+  **SLA:**
+  * Urgent: 24 hours
+  * Standard: 3 days
+  
+  **AI Average:** 2.8 hours
+  **SLA Compliance:** 99%
+end note
+
+|Provider Office|
+if (Approved?) then (yes)
+  :Schedule procedure;
+  :Deliver care to patient;
+  stop
+else (denied)
+  if (Provider agrees?) then (yes)
+    :Alternative treatment;
+    stop
+  else (no)
+    :File appeal;
+    |Appeals Department|
+    :Appeal workflow;
+    note right
+      **Appeal Process:**
+      * Standard appeal: 30 days
+      * Expedited appeal: 72 hours
+      * External review available
+      
+      **Overturn rate:** 15%
+    end note
+    stop
+  endif
+endif
+
+@enduml

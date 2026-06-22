@@ -1,0 +1,380 @@
+@startuml layer-04-ai-agents-detailed
+!theme aws-orange
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 180
+skinparam ranksep 140
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontSize 11
+
+title <size:20><b>Layer 4: AI Agent Fabric - Hybrid Model Architecture</b></size>\n<size:14>11 Specialized Agents | Proprietary + In-House Models | Fallback Strategy | 385,000 executions/day</size>\n<size:12>Cost: $19,760/day (62% reduction via in-house models)</size>\n\n
+
+' ============================================================================
+' AI AGENTS
+' ============================================================================
+
+package "**AI AGENT FABRIC LAYER**" #F5E6FF {
+    
+    ' Data Extraction with Hybrid Models
+    rectangle "**①Intake Agent**" as AG1 #9B59B6 {
+        component "Document Classifier\n(Random Forest)" as ML_CLASS
+        component "LayoutLM v3\n(NER - vLLM)" as LAYOUTLM
+        component "GPT-4o Vision\n(Fallback)" as M1
+        component "OCR Pipeline" as OCR
+        ML_CLASS .down.> LAYOUTLM : 85%
+        LAYOUTLM .down.> M1 : fallback 13%
+        M1 .down.> OCR
+    }
+    
+    ' Eligibility & Benefits with In-House Models
+    rectangle "**②Eligibility Agent**" as AG2 #8E44AD {
+        component "Llama 8B INT8\n(Primary)" as LLAMA8B_E
+        component "GPT-3.5 Turbo\n(Fallback)" as M2
+        component "DB Queries" as DB2
+        LLAMA8B_E .down.> M2 : fallback 8%
+        M2 .down.> DB2
+    }
+    
+    rectangle "**③Benefits Agent**" as AG3 #8E44AD {
+        component "Llama 8B INT8\n(Primary)" as LLAMA8B_B
+        component "GPT-3.5 Turbo\n(Fallback)" as M3
+        component "Cost Calculator" as CALC
+        LLAMA8B_B .down.> M3 : fallback 8%
+        M3 .down.> CALC
+    }
+    
+    ' Clinical Review with In-House LLM + DL Classification
+    rectangle "**④Clinical Agent**" as AG4 #9B59B6 {
+        component "Urgency Classifier\n(ResNet-50)" as DL_URGENCY
+        component "Llama 70B Medical\n(Primary - vLLM)" as LLAMA70B_C
+        component "GPT-4o\n(Fallback Complex)" as M4
+        component "RAG Pipeline\n(430ms)" as RAG
+        component "Vector Search\n(Milvus)" as VEC
+        component "BM25 Search\n(Elasticsearch)" as BM25
+        component "Graph RAG\n(Neo4j)" as GRAPH
+        component "Reranker" as RERANK
+        
+        DL_URGENCY .down.> LLAMA70B_C : triage
+        LLAMA70B_C .down.> M4 : fallback 25%
+        M4 .down.> RAG
+        RAG .down.> VEC
+        RAG .down.> BM25
+        RAG .down.> GRAPH
+        VEC .down.> RERANK
+        BM25 .down.> RERANK
+        GRAPH .down.> RERANK
+    }
+    
+    ' Policy & Fraud with In-House Models
+    rectangle "**⑤Policy Agent**" as AG5 #D2691E {
+        component "Llama 70B Policy\n(Primary - vLLM)" as LLAMA70B_P
+        component "Claude 3.5\n(Complex Cases)" as M5
+        component "Policy Search" as POL
+        LLAMA70B_P .down.> M5 : fallback 23%
+        M5 .down.> POL
+    }
+    
+    rectangle "**⑥Fraud Agent**" as AG6 #9B59B6 {
+        component "XGBoost\n(Risk Scorer)" as ML_FRAUD
+        component "GPT-4o\n(Pattern Analysis)" as M6
+        component "Graph Analysis\n(Neo4j)" as FRAUD_G
+        ML_FRAUD .down.> M6 : high-risk 23%
+        M6 .down.> FRAUD_G
+    }
+    
+    ' Decision Synthesis with In-House Model
+    rectangle "**⑦Decision Agent**" as AG7 #9B59B6 {
+        component "Llama 70B\n(Primary)" as LLAMA70B_D
+        component "GPT-4o\n(Fallback)" as M7
+        component "Confidence\nAggregator" as CONF
+        component "HITL Router" as HITL
+        LLAMA70B_D .down.> M7 : fallback 25%
+        M7 .down.> CONF
+        CONF .down.> HITL
+    }
+    
+    ' Supporting Agents
+    agent "⑧Appeals" as AG8
+    agent "⑨Notification" as AG9
+    agent "⑩Audit" as AG10
+    agent "⑪Communication" as AG11
+}
+
+' ============================================================================
+' MODEL SERVING INFRASTRUCTURE
+' ============================================================================
+
+package "**Model Serving Infrastructure**" #E8F5E9 {
+    rectangle "**vLLM Server**" as VLLM #81C784 {
+        component "Llama 70B Medical FT\n(4x A100 80GB)" as VLLM_70B
+        component "Llama 8B Eligibility FT\n(1x A100 40GB INT8)" as VLLM_8B
+        component "LayoutLM v3 Medical FT\n(1x A100 40GB)" as VLLM_LAYOUTLM
+    }
+    
+    rectangle "**SageMaker Endpoints**" as SAGEMAKER #66BB6A {
+        component "ResNet-50\nUrgency Classifier\n(ml.g4dn.xlarge)" as SM_RESNET
+        component "Random Forest\nDoc Classifier\n(ml.m5.large)" as SM_RF
+        component "XGBoost\nFraud Scorer\n(ml.c5.xlarge)" as SM_XGB
+    }
+    
+    rectangle "**Proprietary APIs**" as PROPRIETARY #4CAF50 {
+        component "Azure OpenAI\n(GPT-4o, GPT-3.5)" as OPENAI_API
+        component "Anthropic API\n(Claude 3.5)" as CLAUDE_API
+    }
+}
+
+' ============================================================================
+' EXTERNAL SYSTEMS
+' ============================================================================
+
+' Orchestration Layer
+cloud "**Orchestration Layer**\n(LangGraph)" as ORCH #E6F7FF
+
+' MCP Tools
+package "**MCP Tools (45+)**" #FFF5E6 {
+    component "parse_x12_278" as T1
+    component "get_member_policy" as T2
+    component "rag_search_clinical" as T3
+    component "check_provider_sanctions" as T4
+    component "..." as T_MORE
+}
+
+' Databases
+database "PostgreSQL 15\n(6 databases)" as PG #E74C3C
+database "Redis 7.0\n(Cache)" as REDIS #FF7043
+database "Milvus 2.3\n(10M vectors)" as MILVUS #81C784
+database "Elasticsearch 8\n(Clinical docs)" as ES #FFD700
+database "Neo4j 5.x\n(Knowledge graph)" as NEO4J #00CED1
+
+' Governance Layer
+cloud "**Governance Layer**\n(Safety & Compliance)" as GOV #FFF5E6
+
+' ============================================================================
+' CONNECTIONS
+' ============================================================================
+
+' Orchestration to Agents
+ORCH -[#0066CC,thickness=3]down-> AG1 : <b>①Intake</b>\n1.8s
+ORCH -[#0066CC,thickness=2]down-> AG2 : <b>②Eligibility</b>\n0.28s
+ORCH -[#0066CC,thickness=2]down-> AG3 : <b>③Benefits</b>\n0.32s
+ORCH -[#228B22,thickness=4]down-> AG4 : <b>④Clinical</b>\n5.2s (bottleneck)
+ORCH -[#D2691E,thickness=3]down-> AG5 : <b>⑤Policy</b>\n2.1s
+ORCH -[#0066CC,thickness=2]down-> AG6 : <b>⑥Fraud</b>\n0.68s
+ORCH -[#0066CC,thickness=3]down-> AG7 : <b>⑦Decision</b>\n0.85s
+
+' Agents to MCP Tools
+AG1 .down.> T1 : use
+AG2 .down.> T2 : use
+AG4 .down.> T3 : use
+AG6 .down.> T4 : use
+
+' Agents to Model Serving Infrastructure
+AG1 -[#228B22,thickness=2]-> SM_RF : classify
+AG1 -[#228B22,thickness=2]-> VLLM_LAYOUTLM : NER 85%
+AG1 -[#666666,dashed]-> OPENAI_API : fallback 13%
+
+AG2 -[#228B22,thickness=2]-> VLLM_8B : primary 92%
+AG2 -[#666666,dashed]-> OPENAI_API : fallback 8%
+
+AG3 -[#228B22,thickness=2]-> VLLM_8B : primary 92%
+AG3 -[#666666,dashed]-> OPENAI_API : fallback 8%
+
+AG4 -[#228B22,thickness=2]-> SM_RESNET : triage
+AG4 -[#228B22,thickness=3]-> VLLM_70B : primary 75%
+AG4 -[#666666,dashed]-> OPENAI_API : fallback 25%
+
+AG5 -[#228B22,thickness=3]-> VLLM_70B : primary 77%
+AG5 -[#666666,dashed]-> CLAUDE_API : fallback 23%
+
+AG6 -[#228B22,thickness=2]-> SM_XGB : primary 77%
+AG6 -[#666666,dashed]-> OPENAI_API : fallback 23%
+
+AG7 -[#228B22,thickness=2]-> VLLM_70B : primary 75%
+AG7 -[#666666,dashed]-> OPENAI_API : fallback 25%
+
+' Agents to Databases
+AG2 -[#9932CC]-> PG : query
+AG3 -[#9932CC]-> PG
+AG4 -[#228B22,thickness=2]-> MILVUS : <b>Vector</b>
+AG4 -[#228B22,thickness=2]-> ES : <b>BM25</b>
+AG4 -[#228B22,thickness=2]-> NEO4J : <b>Graph</b>
+AG2 -[#666666,dashed]-> REDIS : cache
+AG3 -[#666666,dashed]-> REDIS
+
+' Agents to Governance
+AG1 .up.> GOV : safety check
+AG2 .up.> GOV
+AG3 .up.> GOV
+AG4 .up.> GOV
+AG5 .up.> GOV
+AG6 .up.> GOV
+AG7 .up.> GOV
+
+' ============================================================================
+' ANNOTATIONS
+' ============================================================================
+
+note top of AG4
+  <b>Clinical Agent - Hybrid Model Architecture</b>
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  <b>Tier 1 - ResNet-50 Urgency Classifier:</b>
+  • SageMaker ml.g4dn.xlarge
+  • Latency: 18ms P50, 32ms P95
+  • Accuracy: 96.8%
+  • Cost: $0.0003/request
+  
+  <b>Tier 2 - Llama 70B Medical (Primary, 75%):</b>
+  • vLLM server (4x A100 80GB)
+  • Fine-tuned on 2.5M clinical notes
+  • Latency: 280ms P50, 510ms P95
+  • Accuracy: 93.2% (vs 94.5% GPT-4o)
+  • Cost: $0.0055/request
+  
+  <b>Tier 3 - GPT-4o (Fallback, 25%):</b>
+  • Complex edge cases
+  • Latency: 2.1s P50, 3.8s P95
+  • Accuracy: 94.5%
+  • Cost: $0.0275/request
+  
+  <b>RAG Pipeline (430ms):</b>
+  • Vector: 45ms (Milvus HNSW)
+  • BM25: 120ms (Elasticsearch)
+  • Graph: 85ms (Neo4j)
+  • Rerank: 180ms
+  
+  <b>Daily Cost Savings:</b>
+  100% GPT-4o: $15,125
+  75% Llama + 25% GPT-4o: $3,781
+  Savings: $11,344/day (75% reduction)
+end note
+
+note bottom of AG5
+  <b>Why Claude 3.5 for Policy?</b>
+  15% better at policy interpretation
+  vs GPT-4o in A/B tests
+end note
+
+note right of AG7
+  <b>Decision Logic</b>
+  ━━━━━━━━━━━━━━━━
+  • Aggregate confidence
+  • If <0.85 → HITL
+  • 28% routed to human
+  • 68% approved
+  • 18% denied
+end note
+
+' ============================================================================
+' MULTI-MODEL STRATEGY
+' ============================================================================
+
+note as MODEL_STRATEGY
+  <b>Hybrid Model Strategy (Proprietary + In-House + ML/DL)</b>
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  
+  <b>IN-HOUSE MODELS (75% of workload):</b>
+  
+  <b>vLLM Server (K8s, 8x A100 GPUs):</b>
+  • <b>Llama 3.1 70B Medical FT</b> ($0.0055/req)
+    - Clinical, policy, decision (primary 75%)
+    - Latency: 280ms P50 | Accuracy: 93.2%
+  • <b>Llama 3.1 8B INT8 FT</b> ($0.0008/req)
+    - Eligibility, benefits (primary 92%)
+    - Latency: 85ms P50 | Accuracy: 99.6%
+  • <b>LayoutLM v3 Medical FT</b> ($0.0042/page)
+    - Intake NER (primary 85%)
+    - Latency: 220ms/page | Accuracy: 97.2%
+  
+  <b>SageMaker ML/DL:</b>
+  • ResNet-50 Urgency ($0.0003) | RF Doc Class ($0.0001) | XGBoost Fraud ($0.0002)
+  
+  <b>PROPRIETARY (25% fallback):</b>
+  • GPT-4o ($5/1M in, $15/1M out): Complex cases
+  • Claude 3.5 ($3/1M in, $15/1M out): Policy edge cases
+  
+  <b>COST COMPARISON:</b>
+  100% Proprietary: $52,000/day | Hybrid: $19,760/day
+  <b>Savings: $32,240/day (62%) = $11.77M/year</b>
+  ROI: 1,251% (12.5x) | Payback: 0.9 months
+end note
+
+MODEL_STRATEGY .up. AG5
+
+' ============================================================================
+' PERFORMANCE METRICS
+' ============================================================================
+
+note as PERF
+  <b>Performance Metrics (Hybrid Model)</b>
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  
+  | Agent | P50 Latency | Cost (Hybrid) | Cost (Prop Only) |
+  |-------|-------------|---------------|------------------|
+  | Intake | 0.23s (LayoutLM) | $0.0127 | $0.0452 |
+  | Eligibility | 0.085s (Llama 8B) | $0.0008 | $0.0040 |
+  | Benefits | 0.085s (Llama 8B) | $0.0008 | $0.0050 |
+  | Clinical | 0.28s (Llama 70B) | $0.0069 | $0.0275 |
+  | Policy | 0.28s (Llama 70B) | $0.0055 | $0.0120 |
+  | Fraud | 0.012s (XGBoost) | $0.0017 | $0.0095 |
+  | Decision | 0.28s (Llama 70B) | $0.0055 | $0.0142 |
+  
+  <b>Daily Volume:</b> 385,000 agent executions (55,000 PA cases)
+  <b>Success Rate:</b> 96.2% | Fallback Rate: 23% (proprietary) | HITL: 2%
+  <b>Daily Cost:</b> Hybrid $19,760 vs Proprietary $52,000
+  <b>Savings:</b> $32,240/day (62% reduction)
+end note
+
+PERF .up. AG2
+
+' ============================================================================
+' LEGEND
+' ============================================================================
+
+legend bottom right
+  <b>Layer 4: AI Agent Fabric - Hybrid Model Architecture</b>
+  
+  <b>Agents (11):</b>
+  ① Intake (document classification + NER)
+  ② Eligibility (coverage check)
+  ③ Benefits (cost-sharing)
+  ④ Clinical (medical necessity) ⭐
+  ⑤ Policy (rules interpretation)
+  ⑥ Fraud (FWA detection)
+  ⑦ Decision (synthesis)
+  ⑧-⑪ Appeals, Notification, Audit, Communication
+  
+  <b>Hybrid Model Strategy:</b>
+  <b>In-House Models (75% of workload):</b>
+  • Llama 3.1 70B Medical FT (vLLM): Clinical, policy, decision agents
+  • Llama 3.1 8B Eligibility FT (vLLM INT8): Eligibility, benefits agents
+  • LayoutLM v3 Medical Forms FT (vLLM): Intake agent NER
+  • ResNet-50 (SageMaker): Clinical urgency triage
+  • Random Forest (SageMaker): Document type classification
+  • XGBoost (SageMaker): Fraud risk scoring
+  
+  <b>Proprietary Models (25% fallback):</b>
+  • GPT-4o: Complex clinical cases, vision OCR, pattern recognition
+  • Claude 3.5: Complex policy interpretation (15% better than GPT-4o)
+  
+  <b>Fallback Strategy:</b>
+  Tier 1: In-House (75%) → Tier 2: Proprietary (23%) → Tier 3: Rule-Based HITL (2%)
+  
+  <b>Line Types:</b>
+  Solid Green = In-house model (primary)
+  Dashed Gray = Proprietary fallback
+  Thickness = Traffic volume
+  
+  <b>Colors:</b>
+  Purple = Agent services | Green = In-house model serving
+  Orange = Claude 3.5 | Blue = OpenAI APIs
+  
+  <b>Cost Savings:</b>
+  Baseline (100% Proprietary): $52,000/day
+  Hybrid (75% In-House + 25% Prop): $19,760/day
+  Savings: $32,240/day (62%) = $11.77M/year | ROI: 1,251%
+  
+  Generated: June 02, 2026
+endlegend
+
+@enduml

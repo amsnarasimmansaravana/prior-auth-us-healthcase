@@ -1,0 +1,53 @@
+@startuml layer-10-hitl-layer
+!theme aws-orange
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 100
+skinparam ranksep 80
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontSize 11
+skinparam componentFontSize 10
+
+title <size:18><b>Layer 10: HITL Layer</b></size>\n<size:14>Human-in-the-Loop Review & Approval | 14,000 reviews/day (28% of cases)</size>\n\n
+
+rectangle "**LAYER 10: HITL LAYER**" as Layer10 #FCE4EC {
+    
+    component "hitl-routing-svc\n(Drools Rules Engine)" as hitl_routing_svc #F06292
+    component "review-queue-svc\n(Drools Rules Engine)" as review_queue_svc #F06292
+    component "approval-workflow-svc\n(Drools Rules Engine)" as approval_workflow_svc #F06292
+    
+    note right
+      <b>3 Services</b>
+      14,000 reviews/day (28% of cases)
+      <4 hours review SLA
+    end note
+}
+
+database "PostgreSQL" as DB #E74C3C
+database "Redis" as Cache #FF7043
+
+' Connections
+Layer10 -[#0066CC,thickness=2]down-> DB : <b>Data Access</b>
+Layer10 -[#666666,dashed]down-> Cache : <b>Caching</b>
+
+note top of Layer10
+  <b>LAYER 10 METRICS</b>
+  • Services: 3
+  • Volume: 14,000 reviews/day (28% of cases)
+  • Latency: <4 hours review SLA
+  • Tech: Drools Rules Engine, React UI, Temporal, FastAPI
+end note
+
+legend bottom right
+  <b>Layer 10: HITL Layer</b>
+  
+  Services: 3
+  Technology: Drools Rules Engine, React UI, Temporal, FastAPI
+  Volume: 14,000 reviews/day (28% of cases)
+  Performance: <4 hours review SLA
+  
+  Generated: June 02, 2026
+endlegend
+
+@enduml

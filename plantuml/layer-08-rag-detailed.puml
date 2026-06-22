@@ -1,0 +1,272 @@
+@startuml Layer 8 - RAG Retrieval Services - Detailed Architecture
+!define RECTANGLE class
+
+skinparam rectangle {
+    BackgroundColor<<service>> LightBlue
+    BackgroundColor<<database>> LightYellow
+    BackgroundColor<<cache>> LightGreen
+    BackgroundColor<<external>> LightCoral
+    BorderColor Black
+    FontSize 13
+    StereotypeFontSize 11
+}
+
+skinparam arrow {
+    Color Black
+    FontSize 11
+}
+
+skinparam note {
+    BackgroundColor LightYellow
+    BorderColor Black
+    FontSize 11
+}
+
+title Layer 8: RAG Retrieval Services - Hybrid Search Architecture\n\n**Daily Volume**: 275,000 searches/day | **Pipeline Latency**: 430ms P50 | **Accuracy**: 92.5% nDCG@10
+
+' ===== EXTERNAL INPUTS =====
+rectangle "API Gateway\n(Layer 2)" as APIGW <<external>> #LightCoral
+
+' ===== SERVICE 1: VECTOR SEARCH =====
+package "Service 1: Vector Search Service" as VSVC {
+    rectangle "vector-search-svc" as VS <<service>> #LightBlue {
+        rectangle "Query Encoder\n(text-embedding-3-large)" as VS_ENCODER
+        rectangle "HNSW Index\n(M=32, ef=64)" as VS_INDEX
+        rectangle "Result Formatter\n(score, text, metadata)" as VS_FORMATTER
+    }
+}
+
+note right of VS
+  **Technology**: Milvus 2.3
+  **Collections**: 3 (clinical, policy, historical)
+  **Vectors**: 10M (3072-dim)
+  **Index**: HNSW (Hierarchical NSW)
+  **Latency**: 45ms P50, 78ms P95
+  **Throughput**: 6,000 QPS
+  **Recall@10**: 88.5%
+end note
+
+' ===== SERVICE 2: BM25 SEARCH =====
+package "Service 2: BM25 Search Service" as BSVC {
+    rectangle "bm25-search-svc" as BM25 <<service>> #LightBlue {
+        rectangle "Query Analyzer\n(tokenize, stemming)" as BM25_ANALYZER
+        rectangle "BM25 Scorer\n(k1=1.2, b=0.75)" as BM25_SCORER
+        rectangle "Result Formatter\n(score, text, highlights)" as BM25_FORMATTER
+    }
+}
+
+note right of BM25
+  **Technology**: Elasticsearch 8.11
+  **Indices**: 3 (clinical, policy, historical)
+  **Documents**: 10M (avg 40KB each)
+  **Algorithm**: BM25 (Best Matching 25)
+  **Latency**: 120ms P50, 180ms P95
+  **Throughput**: 2,500 QPS
+  **Precision@10**: 76.5%
+end note
+
+' ===== SERVICE 3: GRAPH RAG =====
+package "Service 3: Graph RAG Service" as GSVC {
+    rectangle "graph-rag-svc" as GRAPH <<service>> #LightBlue {
+        rectangle "Entity Extractor\n(NER: diagnosis, meds)" as GRAPH_EXTRACTOR
+        rectangle "Cypher Query Builder\n(pathways, interactions)" as GRAPH_BUILDER
+        rectangle "Graph Traversal\n(up to 5-hop)" as GRAPH_TRAVERSAL
+    }
+}
+
+note right of GRAPH
+  **Technology**: Neo4j 5.13 Enterprise
+  **Nodes**: 500K (Diagnosis, Procedure, Med)
+  **Relationships**: 2M (TREATED_BY, etc.)
+  **Query**: Cypher (optimized)
+  **Latency**: 85ms P50, 150ms P95
+  **Throughput**: 1,200 QPS
+  **Use Cases**: Alternatives, interactions
+end note
+
+' ===== SERVICE 4: HYBRID SEARCH =====
+package "Service 4: Hybrid Search Service" as HSVC {
+    rectangle "hybrid-search-svc" as HYBRID <<service>> #LightSkyBlue {
+        rectangle "Query Analyzer\n(type, entities, routing)" as HYBRID_ANALYZER
+        rectangle "Parallel Orchestrator\n(asyncio, 3 retrievers)" as HYBRID_ORCHESTRATOR
+        rectangle "RRF Fusion Engine\n(k=60, score merging)" as HYBRID_RRF
+        rectangle "Result Deduplicator\n(by doc ID)" as HYBRID_DEDUP
+    }
+}
+
+note left of HYBRID
+  **Technology**: Python 3.11 + FastAPI
+  **Fusion**: RRF (Reciprocal Rank Fusion)
+  **Formula**: RRF(d) = Σ 1/(k + rank(d))
+  **Latency**: 185ms P50 (vector+BM25)
+                270ms P50 (with graph)
+  **Throughput**: 1,500 QPS
+  **nDCG@10**: 78.5% (before rerank)
+end note
+
+' ===== SERVICE 5: EMBEDDING SERVICE =====
+package "Service 5: Embedding Service" as ESVC {
+    rectangle "embedding-svc" as EMBED <<service>> #LightBlue {
+        rectangle "Cache Checker\n(Redis lookup)" as EMBED_CACHE
+        rectangle "OpenAI API Client\n(text-embedding-3-large)" as EMBED_API
+        rectangle "Result Cacher\n(Redis store, 24h TTL)" as EMBED_STORE
+    }
+}
+
+note right of EMBED
+  **Model**: text-embedding-3-large
+  **Dimensions**: 3072
+  **Latency**: 25ms P50 (cached)
+              180ms P95 (API call)
+  **Cache Hit**: 80%
+  **Throughput**: 500 embeds/sec
+  **Cost**: $0.13 per 1M tokens
+end note
+
+' ===== SERVICE 6: RERANKER SERVICE =====
+package "Service 6: Reranker Service" as RSVC {
+    rectangle "reranker-svc" as RERANK <<service>> #LightBlue {
+        rectangle "Cross-Encoder Model\n(ms-marco-MiniLM-L-6)" as RERANK_MODEL
+        rectangle "Batch Scorer\n(32 pairs/batch, GPU)" as RERANK_SCORER
+        rectangle "Threshold Filter\n(relevance ≥ 0.5)" as RERANK_FILTER
+    }
+}
+
+note right of RERANK
+  **Model**: cross-encoder/ms-marco-MiniLM
+  **Device**: NVIDIA T4 GPU
+  **Batch Size**: 32 pairs
+  **Latency**: 180ms P50 (20 docs)
+               320ms P95 (50 docs)
+  **Throughput**: 150 requests/sec
+  **nDCG@10 Improvement**: +18% (78.5%→92.5%)
+end note
+
+' ===== DATABASES =====
+database "Milvus Cluster\n(6 nodes)" as MILVUS <<database>> #LightYellow {
+    rectangle "Collections:\n• clinical_guidelines (5M)\n• policy_embeddings (2M)\n• historical_decisions (3M)" as MILVUS_COLS
+    rectangle "Index: HNSW\nStorage: 1.2 TB\nMemory: 37 GB" as MILVUS_STORAGE
+}
+
+database "Elasticsearch\n(6 nodes)" as ES <<database>> #LightYellow {
+    rectangle "Indices:\n• clinical-guidelines-bm25\n• policy-documents-bm25\n• historical-decisions-bm25" as ES_INDICES
+    rectangle "Storage: 400 GB\nDocs: 10M\nReplicas: 1" as ES_STORAGE
+}
+
+database "Neo4j Cluster\n(3 nodes)" as NEO4J <<database>> #LightYellow {
+    rectangle "Nodes: 500K\nRelationships: 2M\nStorage: 200 GB" as NEO4J_GRAPH
+}
+
+database "Redis Cache\n(3-shard cluster)" as REDIS <<cache>> #LightGreen {
+    rectangle "Embedding Cache\n(80% hit rate, 24h TTL)" as REDIS_EMBED
+    rectangle "Query Result Cache\n(60% hit rate, 1h TTL)" as REDIS_QUERY
+}
+
+' ===== EXTERNAL SYSTEMS =====
+cloud "OpenAI API\n(text-embedding-3-large)" as OPENAI_API <<external>> #LightCoral
+
+rectangle "AI Agents\n(Layer 4)" as AGENTS <<external>> #LightCoral {
+    rectangle "Clinical Agent (3 queries/case)" as AGENT_CLINICAL
+    rectangle "Policy Agent (2 queries/case)" as AGENT_POLICY
+}
+
+' ===== CONNECTIONS: API GATEWAY → SERVICES =====
+
+APIGW -[#blue,thickness=3]-> VS : "① Vector Search\nPOST /v1/vector-search\n45ms"
+APIGW -[#green,thickness=3]-> BM25 : "② BM25 Search\nPOST /v1/bm25-search\n120ms"
+APIGW -[#orange,thickness=3]-> GRAPH : "③ Graph Search\nPOST /v1/graph-search\n85ms"
+APIGW -[#purple,thickness=4]-> HYBRID : "④ Hybrid Search\nPOST /v1/hybrid-search\n185ms (main path)"
+APIGW -[#gray,thickness=2]-> EMBED : "⑤ Embeddings\nPOST /v1/embeddings\n25ms (cached)"
+APIGW -[#red,thickness=2]-> RERANK : "⑥ Rerank\nPOST /v1/rerank\n180ms"
+
+' ===== CONNECTIONS: HYBRID ORCHESTRATOR → RETRIEVERS =====
+
+HYBRID_ORCHESTRATOR -[#blue,thickness=2]-> VS : "Parallel: Vector Search\n(top_k=20)"
+HYBRID_ORCHESTRATOR -[#green,thickness=2]-> BM25 : "Parallel: BM25 Search\n(top_k=20)"
+HYBRID_ORCHESTRATOR -[#orange,thickness=2,dashed]-> GRAPH : "Optional: Graph Search\n(top_k=10)"
+
+VS --> HYBRID_RRF : "20 results\n(vector scores)"
+BM25 --> HYBRID_RRF : "20 results\n(BM25 scores)"
+GRAPH --> HYBRID_RRF : "10 results\n(graph data)"
+
+HYBRID_RRF --> HYBRID_DEDUP : "Merged results\n(RRF scores)"
+HYBRID_DEDUP --> RERANK : "Deduplicated\n(~30 unique docs)"
+
+' ===== CONNECTIONS: SERVICES → DATABASES =====
+
+VS_ENCODER --> EMBED : "Encode query\n(3072-dim vector)"
+EMBED --> OPENAI_API : "API call\n(if cache miss)"
+EMBED --> REDIS : "Cache lookup/store\n(embedding cache)"
+
+VS_INDEX -[#blue,thickness=2]-> MILVUS : "HNSW search\n(L2 distance, ef=64)"
+BM25_SCORER -[#green,thickness=2]-> ES : "BM25 query\n(multi-match, boost)"
+GRAPH_TRAVERSAL -[#orange,thickness=2]-> NEO4J : "Cypher query\n(pathways, interactions)"
+
+' ===== CONNECTIONS: RERANKER → FINAL RESULTS =====
+
+RERANK_FILTER --> AGENTS : "Final results\n(top_k=8, reranked)"
+
+' ===== ANNOTATIONS: RAG PIPELINE FLOW =====
+
+note as PIPELINE_NOTE
+**Complete RAG Pipeline** (430ms total):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Query Analysis (5ms)
+   └─ Extract entities, identify type
+
+2. Parallel Retrieval (145ms max)
+   ├─ Vector Search: 45ms → 20 results
+   ├─ BM25 Search: 120ms → 20 results
+   └─ Graph Search: 85ms → 10 results (optional)
+
+3. RRF Fusion (10ms)
+   ├─ Merge results from retrievers
+   ├─ Calculate RRF scores (k=60)
+   └─ Deduplicate by document ID
+
+4. Reranking (180ms)
+   ├─ Cross-encoder scoring
+   ├─ Filter by threshold (≥0.5)
+   └─ Sort by relevance
+
+5. Post-processing (10ms)
+   └─ Format for agent consumption
+
+**Final Accuracy**: 92.5% nDCG@10
+end note
+
+' ===== LEGEND =====
+
+legend right
+|= **Service Type** |= **Color** |= **Description** |
+| Service | <back:LightBlue>Blue</back> | RAG microservices |
+| Database | <back:LightYellow>Yellow</back> | Vector, Search, Graph DBs |
+| Cache | <back:LightGreen>Green</back> | Redis caching |
+| External | <back:LightCoral>Coral</back> | API Gateway, OpenAI, Agents |
+
+|= **Connection Type** |= **Color** |= **Meaning** |
+| Vector Search Path | <back:blue>Blue (thick)</back> | Semantic vector search flow |
+| BM25 Search Path | <back:green>Green (thick)</back> | Lexical keyword search flow |
+| Graph Search Path | <back:orange>Orange (thick)</back> | Graph traversal flow |
+| Hybrid Main Path | <back:purple>Purple (thickest)</back> | Orchestrated hybrid search |
+| Support Path | <back:gray>Gray (thin)</back> | Embedding, caching |
+| Rerank Path | <back:red>Red (medium)</back> | Cross-encoder reranking |
+
+|= **Performance Metrics** |= **Value** |= **Target** |
+| Vector Search Latency | 45ms P50 | <50ms |
+| BM25 Search Latency | 120ms P50 | <150ms |
+| Graph Search Latency | 85ms P50 | <100ms |
+| Hybrid Search Latency | 185ms P50 | <200ms |
+| Reranking Latency | 180ms P50 | <200ms |
+| **Complete Pipeline** | **430ms P50** | **<500ms** |
+| **Accuracy (nDCG@10)** | **92.5%** | **>90%** |
+| **Daily Volume** | **275K searches** | **Up to 500K** |
+
+|= **Database Sizing** |= **Current** |= **Capacity** |
+| Milvus Vectors | 10M (1.2 TB) | 50M (6 TB) |
+| Elasticsearch Docs | 10M (400 GB) | 50M (2 TB) |
+| Neo4j Graph | 500K nodes, 2M edges | 5M nodes, 20M edges |
+| Redis Cache | 26 GB | 128 GB |
+endlegend
+
+@enduml

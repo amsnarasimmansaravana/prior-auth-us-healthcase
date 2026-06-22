@@ -1,0 +1,89 @@
+@startuml
+!theme plain
+title OPA Decision Optimization - Current vs Optimized Architecture
+
+left to right direction
+
+rectangle "CURRENT STATE (48ms)" as Current #FFE6E6 {
+  component "Request" as C_Req
+  component "Parse Input (2ms)" as C_Parse
+  component "Load Policy (3ms)" as C_Load
+  component "RBAC Rules (5ms)" as C_RBAC
+  component "ABAC Rules (8ms)" as C_ABAC
+  component "Compliance (5ms)" as C_Comp
+  component "Cost Policy (8ms)" as C_Cost
+  component "Decision (4ms)" as C_Decision
+  
+  C_Req --> C_Parse
+  C_Parse --> C_Load
+  C_Load --> C_RBAC
+  C_RBAC --> C_ABAC
+  C_ABAC --> C_Comp
+  C_Comp --> C_Cost
+  C_Cost --> C_Decision
+}
+
+rectangle "OPTIMIZED STATE (18ms)" as Optimized #E6FFE6 {
+  component "Request" as O_Req
+  
+  rectangle "STAGE 1 (5ms) Fast Denial" as O_Stage1 #FFE6E6 {
+    component "Fast Checks" as O_Fast
+    note right of O_Fast
+      - Group denied?
+      - Country denied?
+      - Exit if YES
+    end note
+  }
+  
+  rectangle "STAGE 2 (8ms) RBAC if Pass" as O_Stage2 #FFF0E6 {
+    component "Role Check" as O_Role
+  }
+  
+  rectangle "STAGE 3 (15ms) Expensive if Both Pass" as O_Stage3 #E6F0FF {
+    component "Fraud Score\nBudget Check" as O_Fraud
+  }
+  
+  component "Decision" as O_Decision
+  
+  O_Req --> O_Fast
+  O_Fast --> O_Role
+  O_Role --> O_Fraud
+  O_Fraud --> O_Decision
+}
+
+rectangle "CACHING LAYER (with Redis)" as Cache #E6FFE6 {
+  component "Cache Check (2ms)" as Cache_Check
+  component "Redis\nCache" as Redis
+  component "Cache HIT\n(85%)" as Hit
+  component "Cache MISS\n(15%)" as Miss
+  
+  Cache_Check --> Hit
+  Cache_Check --> Miss
+  Hit --> Redis
+}
+
+Current -[hidden]- Optimized
+Optimized -[hidden]- Cache
+
+note bottom of Current
+  Sequential evaluation of all conditions
+  No early exit optimization
+  No caching
+  Latency: 48ms (p95)
+end note
+
+note bottom of Optimized
+  3-stage pipeline with early exits
+  70% of decisions complete in Stage 1-2
+  Only 30% reach expensive Stage 3
+  Latency: 18ms (p95) - 62% improvement
+end note
+
+note bottom of Cache
+  Cache hit on 85% of requests
+  Effective latency: 12ms average
+  5-minute TTL per decision
+  Invalidation on member/policy updates
+end note
+
+@enduml

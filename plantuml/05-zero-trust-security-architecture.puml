@@ -1,0 +1,330 @@
+@startuml Zero Trust Security Architecture
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Arial
+
+title Healthcare Insurance Multi-Agent AI Platform\nZero Trust Security Architecture\n"Never Trust, Always Verify"
+
+actor "External User\n(Provider)" as ExtUser
+actor "Internal User\n(Clinical Reviewer)" as IntUser
+
+package "Identity & Access Layer" {
+  rectangle "**LAYER 1: IDENTITY VERIFICATION**" as L1 #E3F2FD {
+    rectangle "Azure Active Directory" as AAD {
+      ' Primary authentication
+      ' User directory
+      ' Group management
+    }
+    rectangle "Multi-Factor Authentication" as MFA {
+      ' Azure MFA
+      ' Microsoft Authenticator
+      ' SMS/Call backup
+    }
+    rectangle "Device Trust" as Device {
+      ' Managed devices only
+      ' Compliance check
+      ' Endpoint protection
+    }
+    rectangle "Risk-Based Access" as Risk {
+      ' Sign-in risk detection
+      ' Impossible travel
+      ' Anonymous IP blocking
+      ' Adaptive auth
+    }
+  }
+}
+
+package "Policy Enforcement Layer" {
+  rectangle "**LAYER 2: API GATEWAY & POLICY**" as L2 #FFF3E0 {
+    rectangle "Kong API Gateway" as Kong {
+      ' Rate limiting
+      ' Request validation
+      ' Protocol translation
+    }
+    rectangle "Open Policy Agent (OPA)" as OPA {
+      ' RBAC enforcement
+      ' ABAC policies
+      ' Dynamic authorization
+    }
+    rectangle "WAF" as WAF {
+      ' OWASP Top 10 protection
+      ' DDoS mitigation
+      ' Bot detection
+    }
+  }
+}
+
+package "Network Security Layer" {
+  rectangle "**LAYER 3: SERVICE MESH (Istio)**" as L3 #E8F5E9 {
+    rectangle "mTLS Encryption" as mTLS {
+      ' Service-to-service encryption
+      ' Certificate rotation
+      ' Identity verification
+    }
+    rectangle "Authorization Policies" as AuthzPol {
+      ' Service-level RBAC
+      ' Namespace isolation
+      ' Least privilege
+    }
+    rectangle "Traffic Management" as Traffic {
+      ' Circuit breaking
+      ' Retry logic
+      ' Timeout control
+    }
+  }
+}
+
+package "Application Security Layer" {
+  rectangle "**LAYER 4: MICROSERVICES (Least Privilege)**" as L4 #FCE4EC {
+    rectangle "Agent Services" as Agents {
+      ' Clinical Agent
+      ' Policy Agent
+      ' Fraud Agent
+      ' Each with minimal permissions
+    }
+    rectangle "Data Services" as DataSvc {
+      ' Member Service
+      ' Provider Service
+      ' Claims Service
+      ' Service accounts only
+    }
+    rectangle "HITL Services" as HITL {
+      ' Reviewer UI
+      ' Case Assignment
+      ' Audit Workbench
+    }
+  }
+}
+
+package "Data Security Layer" {
+  rectangle "**LAYER 5: DATA LAYER SECURITY**" as L5 #F3E5F5 {
+    rectangle "Encryption at Rest" as EncRest {
+      ' AES-256 encryption
+      ' Customer-managed keys
+      ' Azure Key Vault
+    }
+    rectangle "Encryption in Transit" as EncTransit {
+      ' TLS 1.3
+      ' Perfect forward secrecy
+      ' Certificate pinning
+    }
+    rectangle "Data Masking" as Masking {
+      ' Dynamic masking
+      ' Static masking (non-prod)
+      ' Tokenization
+    }
+    rectangle "Row-Level Security" as RLS {
+      ' Tenant isolation
+      ' User-based filtering
+      ' Query rewriting
+    }
+  }
+}
+
+package "AI-Specific Security Layer" {
+  rectangle "**LAYER 6: AI SAFETY & GUARDRAILS**" as L6 #E0F2F1 {
+    rectangle "Prompt Injection Defense" as PromptDef {
+      ' Lakera AI
+      ' Input sanitization
+      ' Pattern detection
+    }
+    rectangle "PHI Protection" as PHI {
+      ' Microsoft Presidio
+      ' PII detection
+      ' Redaction engine
+      ' Anonymization
+    }
+    rectangle "Hallucination Detection" as Halluc {
+      ' Groundedness check
+      ' Citation validation
+      ' Confidence thresholds
+    }
+    rectangle "Content Safety" as Content {
+      ' Azure AI Content Safety
+      ' Toxicity filtering
+      ' Bias detection
+    }
+  }
+}
+
+package "Monitoring & Response Layer" {
+  rectangle "**LAYER 7: OBSERVABILITY & SIEM**" as L7 #FFF9C4 {
+    rectangle "Security Monitoring" as SecMon {
+      ' Azure Sentinel (SIEM)
+      ' Threat intelligence
+      ' Anomaly detection
+    }
+    rectangle "Audit Logging" as Audit {
+      ' All access logged
+      ' Immutable logs
+      ' 7-year retention
+    }
+    rectangle "Incident Response" as IR {
+      ' Automated alerts
+      ' Runbook execution
+      ' Breach notification
+    }
+    rectangle "Compliance Monitoring" as Compliance {
+      ' HIPAA compliance
+      ' CMS requirements
+      ' ISO 27001/42001
+    }
+  }
+}
+
+' User Flow
+ExtUser --> AAD : 1. Authenticate
+IntUser --> AAD
+
+AAD --> MFA : 2. MFA Challenge
+MFA --> Device : 3. Device Check
+Device --> Risk : 4. Risk Assessment
+
+Risk --> Kong : 5. Access Token (JWT)
+
+Kong --> OPA : 6. Policy Check
+OPA --> WAF : 7. WAF Scan
+
+WAF --> mTLS : 8. Service Call
+
+mTLS --> AuthzPol : 9. Service AuthZ
+AuthzPol --> Traffic : 10. Traffic Control
+
+Traffic --> Agents : 11. Agent Invocation
+
+Agents --> DataSvc : 12. Data Access
+
+DataSvc --> EncRest : 13. Encrypted Storage
+DataSvc --> RLS : 14. Row Filter
+
+Agents --> PromptDef : 15. Prompt Scan
+PromptDef --> PHI : 16. PHI Check
+
+PHI --> Halluc : 17. Hallucination Check
+Halluc --> Content : 18. Content Safety
+
+Content --> SecMon : 19. Security Log
+SecMon --> Audit : 20. Audit Trail
+
+note right of L1
+  **Identity Verification Metrics:**
+  • Users: 2,500
+  • MFA adoption: 100%
+  • Device compliance: 98%
+  • Sign-in risk blocked: 234/month
+  
+  **Conditional Access Policies:**
+  • Trusted locations only
+  • Managed devices required
+  • MFA always required
+  • Session timeout: 8 hours
+end note
+
+note right of L2
+  **API Gateway Security:**
+  • Rate limit: 1000 req/min per user
+  • DDoS protection: Auto-scale
+  • Bot detection: reCAPTCHA
+  • API key rotation: 90 days
+  
+  **OPA Policy Examples:**
+  • Clinical reviewer can view cases in their queue
+  • Business hours enforcement
+  • Data residency compliance
+  • Export restrictions
+end note
+
+note right of L3
+  **Service Mesh Security:**
+  • mTLS: 100% encrypted
+  • Certificate rotation: 24 hours
+  • Zero trust: No service trusts any other
+  • Namespace isolation: dev/staging/prod
+  
+  **Authorization:**
+  • Service-to-service RBAC
+  • Least privilege principle
+  • Explicit deny by default
+end note
+
+note right of L4
+  **Microservice Security:**
+  • No shared secrets
+  • Service accounts only
+  • Minimal permissions
+  • Network policies enforced
+  
+  **Agent Permissions:**
+  • Clinical Agent: Read MCG, Write decisions
+  • Fraud Agent: Read claims, Write alerts
+  • Policy Agent: Read policies only
+end note
+
+note right of L5
+  **Data Security Metrics:**
+  • Encryption: 100% at rest
+  • TLS 1.3: 100% in transit
+  • Key rotation: 30 days
+  • Backup encryption: AES-256
+  
+  **PHI Protection:**
+  • Dynamic masking: 18 identifiers
+  • Tokenization: SSN, CC
+  • Anonymization: Test/dev environments
+end note
+
+note right of L6
+  **AI Safety Metrics (Last 30 Days):**
+  • Prompt injections blocked: 234
+  • PHI exposures prevented: 12
+  • Hallucinations detected: 89
+  • Toxic outputs filtered: 67
+  
+  **Detection Accuracy:**
+  • Prompt injection: 98.5%
+  • PII detection: 99.2%
+  • Hallucination: 94.3%
+end note
+
+note right of L7
+  **Security Monitoring:**
+  • Events/day: 50M
+  • Alerts/day: 120
+  • Incidents/month: 2-3
+  • MTTR: 45 minutes
+  
+  **Compliance:**
+  • HIPAA violations: 0
+  • Audit findings: 0
+  • Penetration tests: Quarterly
+  • SOC 2 Type II: Certified
+end note
+
+package "Defense in Depth Layers" {
+  rectangle "Summary" as Summary #ECEFF1 {
+    ' Layer 1: Identity (AAD + MFA + Device)
+    ' Layer 2: Network (WAF + API Gateway)
+    ' Layer 3: Application (RBAC + ABAC)
+    ' Layer 4: Data (Encryption + Masking)
+    ' Layer 5: AI (Guardrails + PHI Protection)
+    ' Layer 6: Monitoring (SIEM + Audit)
+  }
+}
+
+note bottom of Summary
+  **Zero Trust Principles Applied:**
+  ✓ Never trust, always verify
+  ✓ Assume breach mentality
+  ✓ Verify explicitly
+  ✓ Use least privilege access
+  ✓ Segment access
+  ✓ Monitor and log everything
+  
+  **Security Posture:**
+  • HIPAA compliant: 100%
+  • Zero breaches: 24 months
+  • Mean time to detect: 8 minutes
+  • Mean time to respond: 45 minutes
+  • Audit pass rate: 100%
+end note
+
+@enduml

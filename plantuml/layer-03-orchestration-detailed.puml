@@ -1,0 +1,201 @@
+@startuml layer-03-orchestration-detailed
+!theme aws-orange
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 150
+skinparam ranksep 150
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontSize 12
+
+title <size:20><b>Layer 3: Orchestration Layer - Detailed Architecture</b></size>\n<size:14>LangGraph + Temporal + State Management | 50,000 workflows/day</size>\n\n
+
+' ============================================================================
+' ORCHESTRATION SERVICES
+' ============================================================================
+
+package "**ORCHESTRATION LAYER**" #E6F7FF {
+    
+    ' Workflow Engine
+    rectangle "**workflow-engine-svc**\n(LangGraph 0.2)" as WFE #4A90E2 {
+        component "Supervisor Agent" as SUP
+        component "StateGraph" as GRAPH
+        component "Agent Router" as ROUTER
+        component "Checkpointer" as CKPT
+        
+        SUP .down.> GRAPH : defines
+        GRAPH .down.> ROUTER : routes to
+        ROUTER .right.> CKPT : checkpoint
+    }
+    
+    ' Temporal Server
+    rectangle "**temporal-server**\n(Temporal.io 1.22)" as TEMP #4A90E2 {
+        component "Frontend Service" as FE
+        component "History Service" as HIST
+        component "Matching Service" as MATCH
+        component "Worker Service" as WORK
+        
+        FE .down.> HIST : stores
+        FE .down.> MATCH : schedules
+        MATCH .down.> WORK : dispatches
+    }
+    
+    ' State Manager
+    rectangle "**state-manager-svc**\n(FastAPI + Redis)" as STATE #4A90E2 {
+        component "State API" as API
+        component "Redis Cache" as REDIS
+        component "Snapshot Manager" as SNAP
+        
+        API .down.> REDIS : read/write
+        API .down.> SNAP : persist
+    }
+}
+
+' ============================================================================
+' EXTERNAL SYSTEMS
+' ============================================================================
+
+' Layer Above (API Gateway)
+cloud "**API Gateway Layer**" as APIGW #FFF8DC
+hexagon "Kong AI Gateway\n(Security + Governance)" as KONGGW #F39C12
+hexagon "LiteLLM Gateway\n(Routing + Fallback)" as LITELLMGW #F39C12
+
+' Layer Below (AI Agents)
+package "**AI Agent Fabric**" #F5E6FF {
+    agent "Intake Agent" as AG1
+    agent "Eligibility Agent" as AG2
+    agent "Clinical Agent" as AG3
+    agent "Decision Agent" as AG4
+    agent "..." as AG_MORE
+}
+
+' Databases
+database "PostgreSQL 15\n(workflow_db)" as PG #E74C3C {
+    storage "Workflow History" as WF_HIST
+    storage "Checkpoints" as WF_CKPT
+    storage "State Snapshots" as STATE_SNAP
+}
+
+database "Redis 7.0\n(Cluster Mode)" as REDIS_DB #FF7043 {
+    storage "Hot State\n(6-hour TTL)" as HOT_STATE
+    storage "Task Queue" as TASK_Q
+}
+
+' ============================================================================
+' CONNECTIONS
+' ============================================================================
+
+' API Gateway to Orchestration
+APIGW -[#0066CC,thickness=3]down-> KONGGW : <b>1. PA Request</b>
+KONGGW -[#0066CC,thickness=3]down-> LITELLMGW : <b>2. Policy + Routing</b>
+LITELLMGW -[#0066CC,thickness=3]down-> WFE : <b>3. Routed Request</b>\n(gRPC)
+
+' Workflow Engine flows
+WFE -[#228B22,thickness=2]down-> TEMP : <b>2. Start Workflow</b>
+TEMP -[#228B22,thickness=2]down-> AG1 : <b>3. Invoke Agents</b>
+TEMP -[#228B22,thickness=2]down-> AG2
+TEMP -[#228B22,thickness=2]down-> AG3
+TEMP -[#228B22,thickness=2]down-> AG4
+
+AG1 -[#666666,dashed]up-> STATE : <b>Store Output</b>
+AG2 -[#666666,dashed]up-> STATE
+AG3 -[#666666,dashed]up-> STATE
+AG4 -[#666666,dashed]up-> STATE
+
+' Database connections
+WFE -[#9932CC,thickness=2]-> PG : <b>Checkpoint</b>
+TEMP -[#9932CC,thickness=2]-> PG : <b>History</b>
+STATE -[#FF6347,thickness=2]-> REDIS_DB : <b>Cache State</b>
+STATE -[#9932CC,thickness=2]-> PG : <b>Snapshot</b>
+
+' ============================================================================
+' ANNOTATIONS
+' ============================================================================
+
+note top of WFE
+  <b>LangGraph Supervisor Pattern</b>
+  • Coordinates 11 AI agents
+  • Conditional routing (simple/standard/complex)
+  • 50,000 workflows/day
+  • P50: 4.2 min, P95: 12.8 min
+end note
+
+note top of TEMP
+  <b>Durable Workflow Execution</b>
+  • Automatic retries (3 attempts, exponential backoff)
+  • Heartbeat monitoring
+  • 30-minute SLA
+  • 90-day history retention
+end note
+
+note top of STATE
+  <b>Redis-Backed State</b>
+  • 500M ops/day
+  • <5ms P50 latency
+  • 98.5% cache hit rate
+  • 6-hour TTL
+end note
+
+note right of KONGGW
+  <b>Gateway Split</b>
+  • Kong AI Gateway: AuthN/AuthZ, PHI controls, audit, quotas
+  • LiteLLM Gateway: Multi-model routing, fallback, cost controls
+  • Trace headers propagated end-to-end
+end note
+
+' ============================================================================
+' WORKFLOW SEQUENCE
+' ============================================================================
+
+note as N1
+  <b>Workflow Sequence</b>
+  ━━━━━━━━━━━━━━━━━━━━
+  ① API Gateway → Workflow Engine
+  ② Workflow Engine → Temporal (start workflow)
+  ③ Temporal → Agents (sequential/parallel)
+  ④ Agents → State Manager (store outputs)
+  ⑤ Workflow Engine → Checkpoint (every 30s)
+  ⑥ Decision → API Gateway (return result)
+  
+  <b>Failure Recovery</b>
+  • Checkpoint every 30s
+  • Retry on failure (3 attempts)
+  • Resume from last checkpoint
+  • Alert after 3 failures
+end note
+
+N1 .up. WFE
+
+' ============================================================================
+' LEGEND
+' ============================================================================
+
+legend bottom right
+  <b>Layer 3: Orchestration Architecture</b>
+  
+  <b>Services (3):</b>
+  • workflow-engine-svc: LangGraph orchestration
+  • temporal-server: Durable execution
+  • state-manager-svc: Redis state management
+  
+  <b>Performance:</b>
+  • Throughput: 50,000 workflows/day
+  • Latency: 4.2 min P50, 12.8 min P95
+  • State ops: <5ms
+  • Cache hit: 98.5%
+  
+  <b>Technology:</b>
+  • LangGraph 0.2 (Python)
+  • Temporal.io 1.22
+  • Redis 7.0 (3-shard cluster)
+  • PostgreSQL 15
+  
+  <b>Workflow Patterns:</b>
+  • Simple (30%): 4 agents, 2-3 min
+  • Standard (50%): 7 agents, 5-8 min
+  • Complex (20%): 10 agents, 15-30 min
+  
+  Generated: June 02, 2026
+endlegend
+
+@enduml

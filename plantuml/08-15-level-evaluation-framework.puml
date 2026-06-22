@@ -1,0 +1,427 @@
+@startuml 15-Level Evaluation Framework
+!include <C4/C4_Component>
+
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Arial
+
+title Healthcare Insurance Multi-Agent AI Platform\n15-Level Enterprise AI Evaluation Framework\n(Comprehensive Quality Assurance)
+
+package "**LEVEL 1: BUSINESS KPI EVALUATION**" as L1 #E3F2FD {
+  rectangle "Financial Metrics" as Finance {
+    label : Cost per case: $35 → $4 (89% ↓)
+    label : Annual savings: $80M
+    label : Fraud savings: $50M/year
+    label : ROI: 667% in Year 1
+  }
+  
+  rectangle "Operational Metrics" as Ops {
+    label : TAT: 48 hrs → 2.8 hrs (94% ↓)
+    label : Throughput: 50K PAs/day
+    label : SLA compliance: 80% → 99%
+    label : Manual review: 100% → 5%
+  }
+  
+  rectangle "Quality Metrics" as Quality {
+    label : Accuracy: 88% → 96%
+    label : Appeal overturn: 18% → 9%
+    label : Member satisfaction: +25%
+    label : Provider satisfaction: +30%
+  }
+}
+
+package "**LEVEL 2: AGENT PERFORMANCE EVALUATION**" as L2 #FFF3E0 {
+  rectangle "Task Metrics" as Task {
+    label : Task completion rate: 99.2%
+    label : Success rate: 98.5%
+    label : Error rate: 0.8%
+    label : Timeout rate: 0.7%
+  }
+  
+  rectangle "Classification Metrics" as Class {
+    label : Accuracy: 96.2%
+    label : Precision: 94.8%
+    label : Recall: 93.5%
+    label : F1 Score: 94.1%
+  }
+  
+  rectangle "Confidence Calibration" as Calib {
+    label : Expected Calibration Error: 0.08
+    label : Brier Score: 0.12
+    label : Reliability diagram analysis
+  }
+}
+
+package "**LEVEL 3: TOOL CALLING EVALUATION**" as L3 #E8F5E9 {
+  rectangle "Tool Selection" as Selection {
+    label : Correct tool chosen: 99.2%
+    label : Wrong tool: 0.5%
+    label : No tool when needed: 0.3%
+  }
+  
+  rectangle "Tool Invocation" as Invocation {
+    label : Correct parameters: 98.7%
+    label : Missing parameters: 0.8%
+    label : Invalid parameters: 0.5%
+  }
+  
+  rectangle "Tool Execution" as Execution {
+    label : Success rate: 99.5%
+    label : Authentication failures: 0.3%
+    label : Timeout: 0.2%
+  }
+}
+
+package "**LEVEL 4: MULTI-STEP REASONING**" as L4 #FCE4EC {
+  rectangle "Planning Quality" as Planning {
+    label : Plan completeness: 94%
+    label : Unnecessary steps: 3%
+    label : Missing steps: 2%
+  }
+  
+  rectangle "Step Execution" as StepExec {
+    label : Step accuracy: 96%
+    label : Correct sequencing: 98%
+    label : Dependency handling: 95%
+  }
+  
+  rectangle "Error Recovery" as Recovery {
+    label : Auto-recovery rate: 85%
+    label : Graceful degradation: 92%
+    label : Rollback success: 98%
+  }
+}
+
+package "**LEVEL 5: MULTI-AGENT COLLABORATION**" as L5 #F3E5F5 {
+  rectangle "Agent Handoff" as Handoff {
+    label : Context preservation: 99%
+    label : Information loss: <1%
+    label : Handoff latency: 45ms
+  }
+  
+  rectangle "Collaboration Success" as Collab {
+    label : Multi-agent success: 98.5%
+    label : Agent conflicts: 0.3%
+    label : Coordination errors: 0.2%
+  }
+  
+  rectangle "Inter-Agent Latency" as InterLatency {
+    label : P50: 30ms
+    label : P95: 80ms
+    label : P99: 150ms
+  }
+}
+
+package "**LEVEL 6: RAG EVALUATION**" as L6 #E0F2F1 {
+  rectangle "Context Relevance" as ContextRel {
+    label : Precision@10: 0.89
+    label : Recall@10: 0.92
+    label : NDCG@10: 0.91
+    label : MRR: 0.88
+  }
+  
+  rectangle "Context Grounding" as Grounding {
+    label : Faithfulness: 96%
+    label : Citation accuracy: 98%
+    label : Source traceability: 100%
+  }
+  
+  rectangle "Hallucination Rate" as Halluc {
+    label : Overall: 1.8% (Target: <2%)
+    label : Clinical: 0.9% (Critical)
+    label : Policy: 2.1%
+    label : Detection accuracy: 94%
+  }
+}
+
+package "**LEVEL 7: SAFETY EVALUATION**" as L7 #FFF9C4 {
+  rectangle "Content Safety" as ContentSafe {
+    label : Toxicity score: 0.02 (Azure AI)
+    label : Hate speech: 0 incidents
+    label : Violence: 0 incidents
+  }
+  
+  rectangle "Security Testing" as Security {
+    label : Prompt injection blocked: 234/month
+    label : Jailbreak attempts: 67/month
+    label : Defense success: 98.5%
+  }
+  
+  rectangle "PHI Protection" as PHIProt {
+    label : PHI leakage: 0 incidents
+    label : PII detection: 99.2%
+    label : Redaction accuracy: 99.8%
+  }
+}
+
+package "**LEVEL 8: COMPLIANCE EVALUATION**" as L8 #E1F5FE {
+  rectangle "Auditability" as Audit {
+    label : Full trace available: 100%
+    label : Audit log completeness: 100%
+    label : Retention compliance: 100%
+  }
+  
+  rectangle "Explainability" as Explain {
+    label : Rationale provided: 100%
+    label : Citation support: 98%
+    label : Human understanding: 95%
+  }
+  
+  rectangle "Policy Compliance" as PolicyComp {
+    label : HIPAA violations: 0
+    label : CMS compliance: 100%
+    label : Policy adherence: 99.5%
+  }
+}
+
+package "**LEVEL 9: HITL EVALUATION**" as L9 #FFEBEE {
+  rectangle "Escalation Accuracy" as Escalate {
+    label : Correct escalation: 96%
+    label : False positive: 2.5%
+    label : False negative: 1.5%
+  }
+  
+  rectangle "Human-AI Agreement" as Agreement {
+    label : Agreement rate: 92%
+    label : Override rate: 8%
+    label : Override justified: 95%
+  }
+  
+  rectangle "Review Efficiency" as ReviewEff {
+    label : Time savings: 75%
+    label : AI assistance value: 4.2/5
+    label : Reviewer satisfaction: 88%
+  }
+}
+
+package "**LEVEL 10: OPERATIONAL EVALUATION**" as L10 #E3F2FD {
+  rectangle "Latency" as Latency {
+    label : P50: 1.8s
+    label : P95: 3.2s
+    label : P99: 5.1s
+  }
+  
+  rectangle "Throughput" as Throughput {
+    label : Requests/sec: 500
+    label : Daily volume: 50K PAs
+    label : Peak capacity: 1500 req/s
+  }
+  
+  rectangle "Availability" as Avail {
+    label : Uptime: 99.92%
+    label : MTBF: 45 days
+    label : MTTR: 12 minutes
+  }
+}
+
+package "**LEVEL 11: COST EVALUATION**" as L11 #FFF3E0 {
+  rectangle "Token Cost" as Token {
+    label : Avg tokens per request: 8,500
+    label : Cost per request: $0.40
+    label : Daily cost: $20,000
+    label : Monthly: $600K
+  }
+  
+  rectangle "Infrastructure Cost" as Infra {
+    label : AKS: $15K/month
+    label : Databases: $8K/month
+    label : Networking: $3K/month
+    label : Storage: $2K/month
+  }
+  
+  rectangle "Cost Optimization" as CostOpt {
+    label : Cache savings: $800/day
+    label : Model routing: 70% savings
+    label : Reserved instances: 40% savings
+  }
+}
+
+package "**LEVEL 12: RELIABILITY EVALUATION**" as L12 #E8F5E9 {
+  rectangle "Success Rate" as Success {
+    label : Overall: 99.2%
+    label : Transient failures: 0.5%
+    label : Permanent failures: 0.3%
+  }
+  
+  rectangle "Retry Effectiveness" as Retry {
+    label : Retry success: 95%
+    label : Avg retries: 1.2
+    label : Max retries: 3
+  }
+  
+  rectangle "Circuit Breaker" as Circuit {
+    label : Trips/day: 2-3
+    label : Recovery time: 30s
+    label : Error threshold: 50%
+  }
+}
+
+package "**LEVEL 13: MEMORY EVALUATION**" as L13 #FCE4EC {
+  rectangle "Context Retention" as Retention {
+    label : Short-term: 98%
+    label : Long-term: 95%
+    label : Cross-session: 90%
+  }
+  
+  rectangle "Memory Accuracy" as MemAccuracy {
+    label : Recall accuracy: 96%
+    label : False memories: 1.2%
+    label : Memory drift: 0.8%
+  }
+}
+
+package "**LEVEL 14: HALLUCINATION DETECTION**" as L14 #F3E5F5 {
+  rectangle "Faithfulness Scoring" as Faith {
+    label : Groundedness: 96%
+    label : Factual consistency: 94%
+    label : Citation support: 98%
+  }
+  
+  rectangle "Detection Methods" as Detection {
+    label : NLI-based: Accuracy 92%
+    label : Self-consistency: 89%
+    label : Human eval: 95%
+  }
+}
+
+package "**LEVEL 15: PRODUCTION LLMOPS**" as L15 #E0F2F1 {
+  rectangle "Drift Detection" as Drift {
+    label : Model drift: Monitored weekly
+    label : Data drift: Monitored daily
+    label : Prompt drift: Version controlled
+    label : Embedding drift: Tracked
+  }
+  
+  rectangle "Performance Monitoring" as PerfMon {
+    label : Accuracy trending: Weekly
+    label : Latency trending: Real-time
+    label : Cost trending: Daily
+    label : Error trending: Real-time
+  }
+  
+  rectangle "Alerting" as Alert {
+    label : Accuracy drop >5%: Critical
+    label : Latency P95 >5s: Warning
+    label : Error rate >2%: Critical
+    label : Cost spike >20%: Warning
+  }
+}
+
+' Connections showing evaluation flow
+L1 --> L2 : Business drives technical
+L2 --> L3 : Agent uses tools
+L3 --> L4 : Tools enable reasoning
+L4 --> L5 : Reasoning enables collaboration
+L5 --> L6 : Agents use RAG
+L6 --> L7 : RAG safety critical
+L7 --> L8 : Safety enables compliance
+L8 --> L9 : Compliance requires HITL
+L9 --> L10 : HITL impacts operations
+L10 --> L11 : Operations drive cost
+L11 --> L12 : Cost impacts reliability
+L12 --> L13 : Reliability needs memory
+L13 --> L14 : Memory can hallucinate
+L14 --> L15 : Detection needs monitoring
+
+note right of L1
+  **Business KPI Dashboard:**
+  
+  Updated: Real-time
+  Stakeholders: Executives, Finance
+  
+  **ROI Calculation:**
+  • Baseline cost: $100M/year
+  • AI platform cost: $20M/year
+  • Savings: $80M/year
+  • Fraud prevention: $50M/year
+  • **Total ROI: $130M/year**
+  • **Payback period: 4 months**
+end note
+
+note right of L6
+  **RAG Evaluation Stack:**
+  
+  **Framework:** RAGAS
+  **Frequency:** Continuous
+  
+  **Test Dataset:**
+  • 1,000 curated Q&A pairs
+  • Human-validated ground truth
+  • Clinical expert review
+  
+  **Evaluation Triggers:**
+  • Every prompt change
+  • Every model update
+  • Weekly scheduled eval
+  
+  **Target Metrics:**
+  • Context Precision: >0.85
+  • Context Recall: >0.90
+  • Faithfulness: >0.95
+  • Hallucination: <2%
+end note
+
+note right of L7
+  **Safety Evaluation Tools:**
+  
+  **Automated:**
+  • Azure AI Content Safety API
+  • Lakera AI Prompt Injection
+  • Microsoft Presidio (PHI)
+  • Custom hallucination detector
+  
+  **Manual:**
+  • Red team testing (quarterly)
+  • Adversarial testing (monthly)
+  • Clinical safety review (weekly)
+  
+  **Incident Response:**
+  • P0: PHI leak (15 min SLA)
+  • P1: Safety violation (1 hr)
+  • P2: Quality issue (4 hrs)
+end note
+
+note right of L15
+  **LLMOps Monitoring Stack:**
+  
+  **Observability:**
+  • LangSmith (prompt tracing)
+  • Langfuse (production monitoring)
+  • Arize Phoenix (drift detection)
+  • OpenTelemetry (distributed tracing)
+  • Prometheus (metrics)
+  • Grafana (dashboards)
+  
+  **Dashboards:**
+  1. Executive KPI Dashboard
+  2. Agent Performance Dashboard
+  3. RAG Quality Dashboard
+  4. Cost Analytics Dashboard
+  5. Security & Compliance Dashboard
+  
+  **Alerts:** 45 alert rules
+  **On-Call:** 24/7 rotation
+end note
+
+rectangle "**Evaluation Governance**" as Gov #ECEFF1 {
+  label : Evaluation frequency: Continuous
+  label : Manual review: Weekly
+  label : Expert validation: Monthly
+  label : Audit: Quarterly
+  label : Certification: Annual
+}
+
+note bottom of Gov
+  **Evaluation Governance Committee:**
+  • Chief Medical Officer
+  • Chief Data Scientist
+  • Quality Assurance Lead
+  • Compliance Officer
+  
+  **Responsibilities:**
+  • Review evaluation results
+  • Approve threshold changes
+  • Escalate failures
+  • Continuous improvement
+end note
+
+@enduml

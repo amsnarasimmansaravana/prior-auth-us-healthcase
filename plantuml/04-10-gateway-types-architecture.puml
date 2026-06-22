@@ -1,0 +1,482 @@
+@startuml 10 Gateway Types - Enterprise AI Architecture
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Arial
+
+title Enterprise AI Gateway Architecture\n10 Specialized Gateway Types\n(Healthcare Insurance Multi-Agent Platform)
+
+package "Request Flow" {
+  actor "Provider" as Provider
+  actor "Clinical Reviewer" as Reviewer
+  
+  Provider --> G1
+  Reviewer --> G1
+}
+
+rectangle "**1. AI GATEWAY**\n(Application Layer)" as G1 #E3F2FD {
+  rectangle "Multi-LLM Router" as Router {
+    ' Simple Query → Llama 3 ($0.02)
+    ' Standard → GPT-4o-mini ($0.05)
+    ' Complex → GPT-4o ($0.30)
+    ' Code → Claude 3.5 ($0.25)
+  }
+  rectangle "Load Balancer" as LB {
+    ' GPT-4o Instance 1
+    ' GPT-4o Instance 2
+    ' GPT-4o Instance 3
+  }
+  rectangle "Cost Optimizer" as Cost {
+    ' Token tracking
+    ' Budget enforcement
+    ' Usage analytics
+  }
+  rectangle "Failover Handler" as Failover {
+    ' Primary: GPT-4o
+    ' Backup: Claude 3.5
+    ' Emergency: GPT-3.5
+  }
+}
+
+note right of G1
+  **Purpose:** Multi-model orchestration
+  **Technologies:** Portkey, LiteLLM, OpenRouter
+  
+  **Routing Logic:**
+  • Query complexity score
+  • Cost per token
+  • Latency requirements
+  • Model availability
+  
+  **Cost Savings:**
+  • Before: $150/day (all GPT-4o)
+  • After: $45/day (smart routing)
+  • Savings: 70%
+  
+  **Metrics:**
+  • Requests/sec: 500
+  • P95 latency: 2.1s
+  • Error rate: 0.3%
+end note
+
+rectangle "**2. SECURITY GATEWAY (LLM Firewall)**\n(Security Layer)" as G2 #FFEBEE {
+  rectangle "Input Scanner" as InputScan {
+    ' Prompt injection detection
+    ' Jailbreak prevention
+    ' PII/PHI detection
+    ' Toxicity filtering
+  }
+  rectangle "Threat Detector" as Threat {
+    ' SQL injection
+    ' XSS attempts
+    ' LDAP injection
+    ' Command injection
+  }
+  rectangle "Data Masker" as Mask {
+    ' SSN redaction
+    ' PHI anonymization
+    ' Credit card masking
+  }
+  rectangle "Output Scanner" as OutputScan {
+    ' PHI leakage prevention
+    ' Toxic content filter
+    ' Hallucination detection
+    ' Compliance check
+  }
+}
+
+note right of G2
+  **Purpose:** AI-specific threat protection
+  **Technologies:** Lakera AI, Protect AI,
+                    NVIDIA NeMo Guardrails
+  
+  **Blocked Threats (Last 30 Days):**
+  • Prompt injections: 234
+  • Jailbreak attempts: 67
+  • PHI exposure: 12
+  • Toxic outputs: 89
+  
+  **Detection Accuracy:**
+  • Prompt injection: 98.5%
+  • PII detection: 99.2%
+  • Toxicity: 97.8%
+  
+  **Latency Impact:** +50ms
+end note
+
+rectangle "**3. AGENT GATEWAY**\n(Agent Orchestration Layer)" as G3 #E8F5E9 {
+  rectangle "Agent Registry" as AgentReg {
+    json registry {
+      "clinical-agent": {
+        "replicas": 10,
+        "status": "healthy",
+        "version": "v2.3.1"
+      }
+    }
+  }
+  rectangle "Agent Router" as AgentRouter {
+    ' Capability-based routing
+    ' Load balancing
+    ' Health checks
+  }
+  rectangle "A2A Protocol Handler" as A2A {
+    ' Message validation
+    ' Schema enforcement
+    ' Observability
+  }
+  rectangle "Agent Mesh" as Mesh {
+    ' Service discovery
+    ' Circuit breaker
+    ' Retry logic
+  }
+}
+
+note right of G3
+  **Purpose:** Agent-to-agent communication
+  **Technologies:** Kong, Dapr, Istio
+  
+  **Agent Discovery:**
+  1. Query: "Which agent handles benefits?"
+  2. Registry lookup
+  3. Return: benefits-agent replicas
+  4. Load balance across 5 replicas
+  
+  **Health Monitoring:**
+  • Heartbeat: 10s interval
+  • Unhealthy threshold: 3 failures
+  • Auto-scaling: CPU > 70%
+  
+  **A2A Messages/Day:** 500K
+  **Latency P95:** 45ms
+end note
+
+rectangle "**4. MCP GATEWAY**\n(Tool Layer)" as G4 #FFF3E0 {
+  rectangle "Tool Registry" as ToolReg {
+    json tools {
+      "mcg_guidelines": {
+        "auth": "OAuth2",
+        "permissions": "[clinical-agent]",
+        "rate_limit": "100/min"
+      }
+    }
+  }
+  rectangle "Tool Router" as ToolRouter {
+    ' Capability matching
+    ' Permission check
+    ' Authentication
+  }
+  rectangle "Schema Validator" as Schema {
+    ' Parameter validation
+    ' Type checking
+    ' Version compatibility
+  }
+  rectangle "Tool Auditor" as ToolAudit {
+    ' Usage logging
+    ' Cost tracking
+    ' Compliance audit
+  }
+}
+
+note right of G4
+  **Purpose:** MCP tool discovery & governance
+  **Technologies:** MCP servers, Vault
+  
+  **Tool Discovery Flow:**
+  1. Agent: "I need MCG guidelines"
+  2. Query registry by capability
+  3. Check permissions (RBAC)
+  4. Retrieve OAuth token
+  5. Validate request schema
+  6. Execute tool call
+  7. Audit log
+  
+  **Registered Tools:** 47
+  **Tool Calls/Day:** 250K
+  **Auth Success Rate:** 99.8%
+end note
+
+rectangle "**5. LLM GATEWAY**\n(Model Layer)" as G5 #FCE4EC {
+  rectangle "Task Classifier" as Classifier {
+    ' Clinical reasoning
+    ' Document extraction
+    ' Simple Q&A
+  }
+  rectangle "Model Selector" as Selector {
+    ' Clinical → GPT-4o
+    ' Extraction → GPT-4o-mini
+    ' Q&A → GPT-3.5
+  }
+  rectangle "Cache Layer" as CacheLLM {
+    ' Semantic caching
+    ' 1-hour TTL
+    ' Cache hit: 35%
+  }
+  rectangle "Retry Handler" as Retry {
+    ' Exponential backoff
+    ' Max retries: 3
+    ' Timeout: 30s
+  }
+}
+
+note right of G5
+  **Purpose:** LLM request optimization
+  **Technologies:** LiteLLM, Portkey, Helicone
+  
+  **Task-Based Routing:**
+  • Clinical review → GPT-4o (96% accuracy)
+  • Entity extraction → GPT-4o-mini (94% accuracy)
+  • FAQ → GPT-3.5 (88% accuracy)
+  
+  **Performance:**
+  • Cache hit rate: 35%
+  • Cache savings: $800/day
+  • Latency reduction: 85%
+  
+  **Fallback Chain:**
+  GPT-4o → Claude 3.5 → GPT-3.5
+end note
+
+rectangle "**6. HUMAN APPROVAL GATEWAY**\n(HITL Layer)" as G6 #F3E5F5 {
+  rectangle "Risk Assessor" as Risk {
+    ' Amount-based
+    ' Complexity-based
+    ' Confidence-based
+  }
+  rectangle "Workflow Engine" as Workflow {
+    ' Route to queue
+    ' Assign reviewer
+    ' SLA tracking
+  }
+  rectangle "Escalation Manager" as Escalate {
+    ' Low → Auto-approve
+    ' Medium → Supervisor
+    ' High → Senior reviewer
+    ' Critical → Board
+  }
+  rectangle "Override Tracker" as Override {
+    ' AI vs Human decision
+    ' Reason capture
+    ' Pattern analysis
+  }
+}
+
+note right of G6
+  **Purpose:** Mandatory human oversight
+  **Technologies:** ServiceNow, Custom
+  
+  **Risk-Based Routing:**
+  | Risk | Action |
+  |------|--------|
+  | <0.4 | Auto-execute |
+  | 0.4-0.75 | Supervisor |
+  | 0.75-0.9 | Senior approval |
+  | >0.9 | Board review |
+  
+  **HITL Metrics:**
+  • Auto-approval: 72%
+  • Human review: 28%
+  • Override rate: 8%
+  • Avg review time: 15 min
+end note
+
+rectangle "**7. DATA GATEWAY**\n(Data Security Layer)" as G7 #E0F2F1 {
+  rectangle "Access Controller" as Access {
+    ' Row-level security
+    ' Column masking
+    ' RBAC enforcement
+  }
+  rectangle "Query Optimizer" as QueryOpt {
+    ' Query rewriting
+    ' Index hints
+    ' Connection pooling
+  }
+  rectangle "Audit Logger" as DataAudit {
+    ' All queries logged
+    ' Data lineage
+    ' PHI access tracking
+  }
+  rectangle "Injection Preventer" as Injection {
+    ' SQL validation
+    ' Parameterized queries
+    ' Whitelist enforcement
+  }
+}
+
+note right of G7
+  **Purpose:** Secure data access
+  **Technologies:** OPA, Database proxies
+  
+  **Row-Level Security Example:**
+  ```sql
+  -- Agent query
+  SELECT * FROM patients WHERE id = 123456
+  
+  -- Gateway transforms to
+  SELECT * FROM patients 
+  WHERE id = 123456 
+  AND organization_id = <agent_org_id>
+  ```
+  
+  **Column Masking:**
+  • SSN → ***-**-1234
+  • DOB → 19XX-XX-XX
+  • Name → J*** S***
+  
+  **Audit:** 100% queries logged
+end note
+
+rectangle "**8. VECTOR GATEWAY**\n(RAG Layer)" as G8 #FFF9C4 {
+  rectangle "Query Router" as VectorRouter {
+    ' Clinical → Milvus Clinical
+    ' Policy → Milvus Policy
+    ' Multi-collection search
+  }
+  rectangle "Metadata Filter" as Filter {
+    ' Document type
+    ' Date range
+    ' Organization
+  }
+  rectangle "Hybrid Retriever" as Hybrid {
+    ' Vector search (cosine)
+    ' BM25 keyword
+    ' Fusion ranking
+  }
+  rectangle "Reranker" as Reranker {
+    ' Cross-encoder
+    ' Diversity filter
+    ' Top-K selection
+  }
+}
+
+note right of G8
+  **Purpose:** Vector DB access control
+  **Technologies:** Milvus, Pinecone
+  
+  **Hybrid Retrieval:**
+  1. BM25 search → Top 100
+  2. Vector search → Top 100
+  3. Metadata filter
+  4. Cross-encoder rerank
+  5. Return Top 10
+  
+  **Collections:**
+  • clinical_guidelines: 5M vectors
+  • policy_documents: 2M vectors
+  • case_history: 10M vectors
+  
+  **Performance:**
+  • P95 latency: 120ms
+  • Relevance@10: 0.89
+end note
+
+rectangle "**9. WORKFLOW GATEWAY**\n(Orchestration Layer)" as G9 #E1F5FE {
+  rectangle "State Manager" as State {
+    ' Workflow state persistence
+    ' Checkpoint creation
+    ' State recovery
+  }
+  rectangle "Saga Coordinator" as Saga {
+    ' Distributed transactions
+    ' Compensation logic
+    ' Rollback handling
+  }
+  rectangle "Retry Manager" as RetryWF {
+    ' Failed step retry
+    ' Exponential backoff
+    ' Dead letter queue
+  }
+  rectangle "SLA Monitor" as SLAMon {
+    ' Workflow timing
+    ' SLA violation alerts
+    ' Auto-escalation
+  }
+}
+
+note right of G9
+  **Purpose:** Workflow orchestration
+  **Technologies:** Temporal, Camunda
+  
+  **PA Workflow Steps:**
+  1. Intake (2 min)
+  2. Eligibility (15 sec)
+  3. Benefits (20 sec)
+  4. Clinical review (5 min)
+  5. Decision (10 sec)
+  6. Notification (30 sec)
+  
+  **Total:** ~8 minutes
+  
+  **Reliability:**
+  • Success rate: 99.2%
+  • Auto-retry: 95% success
+  • Manual intervention: 0.8%
+end note
+
+rectangle "**10. OBSERVABILITY GATEWAY**\n(Monitoring Layer)" as G10 #ECEFF1 {
+  rectangle "Trace Collector" as Trace {
+    ' OpenTelemetry
+    ' Distributed tracing
+    ' Span correlation
+  }
+  rectangle "Metrics Aggregator" as Metrics {
+    ' Prometheus
+    ' Token usage
+    ' Latency tracking
+    ' Cost attribution
+  }
+  rectangle "Log Aggregator" as Logs {
+    ' ELK Stack
+    ' Structured logging
+    ' Log correlation
+  }
+  rectangle "Cost Tracker" as CostTrack {
+    ' Per-request cost
+    ' Per-agent cost
+    ' Total platform cost
+  }
+}
+
+note right of G10
+  **Purpose:** Comprehensive monitoring
+  **Technologies:** OTel, LangSmith, Prometheus
+  
+  **Observability Pillars:**
+  • Traces: Every request
+  • Metrics: 200+ metrics
+  • Logs: All events
+  • Costs: Per-request tracking
+  
+  **Dashboards:**
+  • AI Platform Overview
+  • Agent Performance
+  • Cost Analytics
+  • Error Tracking
+  
+  **Alerts:** 45 alert rules
+  **Retention:** 30 days (hot), 1 year (cold)
+end note
+
+' Gateway Flow
+G1 --> G2 : LLM request
+G2 --> G3 : Secure request
+G3 --> G4 : Agent call
+G4 --> G5 : Tool execution
+G5 --> G6 : Decision review
+G6 --> G7 : Data access
+G7 --> G8 : RAG retrieval
+G8 --> G9 : Workflow step
+G9 --> G10 : Observability
+
+note bottom
+  **Gateway Architecture Benefits:**
+  • Separation of concerns
+  • Independent scaling
+  • Specialized optimization
+  • Clear responsibility
+  • Enhanced security
+  • Better observability
+  
+  **Total Latency Impact:** ~200ms
+  **Security Coverage:** 99.8%
+  **Cost Optimization:** 70% savings
+end note
+
+@enduml

@@ -1,0 +1,197 @@
+@startuml Enterprise 10-Layer Architecture
+!include <C4/C4_Container>
+
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Arial
+
+title Healthcare Insurance Multi-Agent AI Platform\n10-Layer Enterprise Architecture
+
+rectangle "**LAYER 1: CHANNEL LAYER**" as L1 #E3F2FD {
+  rectangle "Provider Portal\n(React, Next.js)" as Portal
+  rectangle "API Gateway\n(RESTful, FHIR R4)" as API
+  rectangle "EDI Processor\n(X12 278, 837)" as EDI
+  rectangle "Fax Server\n(OCR, Azure Form Recognizer)" as Fax
+  rectangle "Mobile App\n(Provider Mobile)" as Mobile
+  rectangle "IVR\n(Twilio, Speech-to-Text)" as IVR
+}
+
+rectangle "**LAYER 2: API GATEWAY & SECURITY LAYER**" as L2 #FFF3E0 {
+  rectangle "Kong/Apigee\nAPI Management" as Kong
+  rectangle "WAF\n(Web Application Firewall)" as WAF
+  rectangle "OAuth2/OIDC\nAuthentication" as OAuth
+  rectangle "Rate Limiting\n(Per Tenant)" as RateLimit
+  rectangle "mTLS\n(Service-to-Service)" as mTLS
+  rectangle "OPA\n(Policy Engine)" as OPA
+}
+
+rectangle "**LAYER 3: ORCHESTRATION LAYER**" as L3 #E8F5E9 {
+  rectangle "Multi-Agent Orchestrator\n(LangGraph Supervisor)" as Orchestrator
+  rectangle "Temporal\n(Workflow Engine)" as Temporal
+  rectangle "Event Bus\n(Kafka)" as EventBus
+  rectangle "SLA Engine\n(Monitoring)" as SLA
+  rectangle "A2A Protocol\n(Agent-to-Agent)" as A2A
+}
+
+rectangle "**LAYER 4: AGENT FABRIC**" as L4 #FCE4EC {
+  rectangle "Intake Agent\n(OCR, Extraction)" as Intake
+  rectangle "Eligibility Agent\n(Member Lookup)" as Eligibility
+  rectangle "Benefits Agent\n(Coverage Validator)" as Benefits
+  rectangle "Clinical Agent\n(Medical Necessity)" as Clinical
+  rectangle "Policy Agent\n(Rule Engine)" as Policy
+  rectangle "Fraud Agent\n(Anomaly Detection)" as Fraud
+  rectangle "Decision Agent\n(Aggregation)" as Decision
+  rectangle "Appeals Agent\n(Case Law Research)" as Appeals
+  rectangle "Notification Agent\n(Multi-Channel)" as Notification
+  rectangle "Audit Agent\n(Compliance Logging)" as Audit
+  rectangle "COM Agent\n(Coordination of Care)" as COM
+}
+
+rectangle "**LAYER 5: AGENT GOVERNANCE PLATFORM**" as L5 #F3E5F5 {
+  rectangle "Agent Registry\n(Metadata, Versioning)" as Registry
+  rectangle "Prompt Registry\n(Version Control)" as PromptReg
+  rectangle "Model Governance\n(Certification, Drift)" as ModelGov
+  rectangle "Safety Policies\n(Guardrails)" as Safety
+  rectangle "Runtime Guardrails\n(Lakera AI, NeMo)" as Guardrails
+  rectangle "Agent RBAC\n(Permissions)" as RBAC
+}
+
+rectangle "**LAYER 6: MCP + TOOL DISCOVERY LAYER**" as L6 #E0F2F1 {
+  rectangle "Tool Registry\n(MCP Servers)" as ToolReg
+  rectangle "Capability Routing\n(Tool Selection)" as CapRoute
+  rectangle "Tool Governance\n(RBAC, Audit)" as ToolGov
+  rectangle "Schema Validation\n(Parameter Check)" as SchemaVal
+  rectangle "Version Management\n(Tool Versioning)" as ToolVer
+  rectangle "Tool Telemetry\n(Usage Tracking)" as ToolTel
+}
+
+rectangle "**LAYER 7: MEMORY + KNOWLEDGE LAYER**" as L7 #FFF9C4 {
+  rectangle "Vector DB\n(Milvus)\n- Clinical guidelines\n- Policies\n- Case history" as VectorDB
+  rectangle "Knowledge Graph\n(Neo4j)\n- Member relationships\n- Provider networks\n- Disease ontology" as KG
+  rectangle "Working Memory\n(Redis)\n- Session state\n- Agent context\n- Real-time cache" as Redis
+  rectangle "Episodic Memory\n(PostgreSQL)\n- Case history\n- Decision logs\n- Audit trail" as Postgres
+  rectangle "Semantic Cache\n(Response caching)" as Cache
+}
+
+rectangle "**LAYER 8: RAG ARCHITECTURE**" as L8 #FFEBEE {
+  rectangle "Document Store\n(Azure Blob, S3)" as DocStore
+  rectangle "Chunking Engine\n(Semantic chunking)" as Chunking
+  rectangle "Embeddings\n(BGE-large-en-v1.5)" as Embeddings
+  rectangle "Hybrid Search\n(BM25 + Vector)" as HybridSearch
+  rectangle "Reranking\n(Cross-Encoder)" as Rerank
+  rectangle "Context Compression\n(LLMLingua)" as Compress
+  rectangle "Citation Engine\n(Source tracking)" as Citation
+}
+
+rectangle "**LAYER 9: DATA SERVICES LAYER**" as L9 #E1F5FE {
+  rectangle "Member Service\n(Demographics, History)" as MemberSvc
+  rectangle "Provider Service\n(NPI, Network Status)" as ProviderSvc
+  rectangle "Policy Service\n(Coverage Rules)" as PolicySvc
+  rectangle "Claims Service\n(Claims History)" as ClaimsSvc
+  rectangle "Benefits Config\n(Plan Design)" as BenefitsSvc
+  rectangle "Network Service\n(In/Out Network)" as NetworkSvc
+  rectangle "Formulary Service\n(Drug Coverage)" as FormularySvc
+  rectangle "Clinical Content\n(MCG, InterQual)" as ClinicalSvc
+}
+
+rectangle "**LAYER 10: HUMAN-IN-THE-LOOP LAYER**" as L10 #F1F8E9 {
+  rectangle "Reviewer UI\n(Angular, React)" as ReviewerUI
+  rectangle "Case Assignment\n(Load Balancing)" as Assignment
+  rectangle "Escalation Engine\n(Risk-based Routing)" as Escalation
+  rectangle "Peer Review\n(Clinical Validation)" as PeerReview
+  rectangle "Appeals Workbench\n(Complex Cases)" as AppealsWB
+  rectangle "QA Dashboard\n(Quality Assurance)" as QA
+  rectangle "Audit Workbench\n(Compliance Review)" as AuditWB
+}
+
+rectangle "**CROSS-CUTTING CONCERNS**" as CC #ECEFF1 {
+  rectangle "Event-Driven Backbone\n(Kafka, Event Sourcing)" as Events
+  rectangle "Observability Layer\n(OpenTelemetry, Prometheus, Grafana, LangSmith)" as Observability
+  rectangle "AI Safety Layer\n(Guardrails, PHI Detection, Hallucination Detection)" as AISafety
+  rectangle "Data Layer\n(PostgreSQL, Redis, Milvus, Neo4j, Blob Storage)" as DataLayer
+}
+
+' Connections
+Portal --> Kong
+API --> Kong
+EDI --> Kong
+Fax --> Kong
+Mobile --> Kong
+IVR --> Kong
+
+Kong --> Orchestrator
+WAF --> Kong
+OAuth --> Kong
+RateLimit --> Kong
+mTLS --> Kong
+OPA --> Kong
+
+Orchestrator --> Intake
+Orchestrator --> Eligibility
+Orchestrator --> Benefits
+Orchestrator --> Clinical
+Orchestrator --> Policy
+Orchestrator --> Fraud
+Orchestrator --> Decision
+
+Temporal --> Orchestrator
+EventBus --> Orchestrator
+SLA --> Orchestrator
+A2A --> Orchestrator
+
+Intake --> Registry
+Clinical --> Registry
+Policy --> Registry
+Fraud --> Registry
+
+Clinical --> ToolReg
+Policy --> ToolReg
+Fraud --> ToolReg
+
+Clinical --> VectorDB
+Clinical --> KG
+Policy --> VectorDB
+Fraud --> KG
+
+VectorDB --> HybridSearch
+DocStore --> Chunking
+Chunking --> Embeddings
+Embeddings --> HybridSearch
+HybridSearch --> Rerank
+
+Clinical --> MemberSvc
+Eligibility --> MemberSvc
+Benefits --> BenefitsSvc
+Clinical --> ClinicalSvc
+Fraud --> ClaimsSvc
+
+Decision --> ReviewerUI
+Escalation --> ReviewerUI
+
+note right of L1
+  **Volume:** 50K PAs/day
+  **Channels:** Portal (50%), Fax (30%), EDI (15%)
+  **SLA:** <30 min processing
+end note
+
+note right of L4
+  **11 Specialized Agents**
+  **Model:** GPT-4o, Claude 3.5 Sonnet
+  **Orchestration:** LangGraph Supervisor
+  **Accuracy:** 96% clinical decisions
+end note
+
+note right of L7
+  **Vector DB:** 10M+ embeddings
+  **Knowledge Graph:** 500K+ entities
+  **Working Memory:** <1ms latency
+  **Episodic Memory:** 5-year retention
+end note
+
+note right of L10
+  **HITL Rate:** 5% high-value cases
+  **Review Time:** 15 min average
+  **SLA Compliance:** 99%
+  **Override Rate:** <10%
+end note
+
+@enduml

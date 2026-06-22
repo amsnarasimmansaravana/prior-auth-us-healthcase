@@ -1,0 +1,499 @@
+@startuml ISO 42001 AI Governance Framework
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Arial
+
+title Healthcare Insurance Multi-Agent AI Platform\nISO/IEC 42001 AI Management System (AIMS)\n(Certification Framework & Governance)
+
+package "**GOVERNANCE STRUCTURE**" as GOV #E3F2FD {
+  rectangle "AI Governance Committee" as Committee {
+    actor "Chief AI Officer\n(Chair)" as CAIO
+    actor "Chief Medical Officer" as CMO
+    actor "Chief Compliance Officer" as CCO
+    actor "Chief Technology Officer" as CTO
+    actor "Chief Privacy Officer" as CPO
+    actor "External Ethics Advisor" as Ethics
+  }
+  
+  rectangle "Specialized Boards" as Boards {
+    rectangle "AI Ethics Board" as EthicsBoard {
+      ' Responsible AI principles
+      ' Bias evaluation
+      ' Ethical review
+    }
+    
+    rectangle "Model Governance Team" as ModelGov {
+      ' Model certification
+      ' Performance monitoring
+      ' Drift detection
+    }
+    
+    rectangle "Clinical AI Review Board" as ClinicalBoard {
+      ' Medical safety
+      ' Clinical validation
+      ' Patient safety
+    }
+  }
+}
+
+package "**ISO 42001 CERTIFICATION PROCESS**" as CERT #FFF3E0 {
+  rectangle "Phase 1: Scope Definition" as Scope {
+    note right
+      **Certification Scope:**
+      
+      "Development, deployment, operation, 
+      monitoring, and governance of the 
+      Enterprise Agentic AI Platform used 
+      for multi-agent orchestration, 
+      AI assistants, document intelligence, 
+      RAG systems, and autonomous 
+      decision-support workflows in 
+      healthcare insurance."
+      
+      **Boundaries:**
+      • In Scope: All AI agents, LLMs, 
+        prompts, models, tools, datasets
+      • Out of Scope: Legacy systems, 
+        manual processes
+    end note
+  }
+  
+  rectangle "Phase 2: AI Inventory" as Inventory {
+    database "AI Asset Register" as AssetReg {
+      json assets {
+        "llms": [
+          {
+            "name": "GPT-4o",
+            "vendor": "OpenAI",
+            "classification": "External",
+            "risk_level": "Medium",
+            "use_case": "Clinical review",
+            "approval_status": "Approved"
+          }
+        ],
+        "agents": [
+          {
+            "name": "Clinical Review Agent",
+            "classification": "Internal",
+            "risk_level": "High",
+            "approval_status": "Certified"
+          }
+        ],
+        "datasets": [
+          {
+            "name": "MCG Guidelines",
+            "classification": "Licensed",
+            "risk_level": "Low",
+            "approval_status": "Approved"
+          }
+        ]
+      }
+    }
+  }
+  
+  rectangle "Phase 3: Risk Assessment" as Risk {
+    rectangle "AI Impact Assessment (AIIA)" as AIIA {
+      ' Business impact
+      ' Technical risks
+      ' Regulatory risks
+      ' Ethical risks
+      ' Privacy risks
+    }
+    
+    rectangle "Risk Matrix" as Matrix {
+      ' Likelihood × Impact
+      ' Risk scoring
+      ' Mitigation strategies
+      ' Residual risk
+    }
+  }
+  
+  rectangle "Phase 4: Policy Framework" as Policies {
+    rectangle "AI Policy Documents" as Docs {
+      ' ✓ AI Policy Statement
+      ' ✓ Risk Management Plan
+      ' ✓ Data Governance Policy
+      ' ✓ Model Governance Policy
+      ' ✓ Agent Lifecycle Policy
+      ' ✓ Incident Response Plan
+      ' ✓ Third-Party AI Policy
+      ' ✓ Bias Management Policy
+    }
+  }
+  
+  rectangle "Phase 5: Controls Implementation" as Controls {
+    rectangle "AI Lifecycle Controls" as Lifecycle {
+      ' Agent development
+      ' Testing & validation
+      ' Deployment approval
+      ' Monitoring
+      ' Retirement
+    }
+    
+    rectangle "Human Oversight" as HITL {
+      ' Risk-based routing
+      ' Approval gates
+      ' Override tracking
+      ' Escalation workflows
+    }
+    
+    rectangle "Safety Controls" as Safety {
+      ' Prompt injection defense
+      ' PHI protection
+      ' Hallucination detection
+      ' Guardrails
+    }
+  }
+  
+  rectangle "Phase 6: Audit & Certification" as Audit {
+    rectangle "Stage 1 Audit\n(Documentation Review)" as Stage1 {
+      ' Policy review
+      ' Risk register review
+      ' AI inventory review
+      ' Process documentation
+      ' Gap analysis
+    }
+    
+    rectangle "Stage 2 Audit\n(Implementation Verification)" as Stage2 {
+      ' Interviews
+      ' Control testing
+      ' Evidence review
+      ' Site inspection
+      ' Implementation validation
+    }
+    
+    rectangle "Certification Decision" as Decision {
+      ' ✓ Certificate issued
+      ' Validity: 3 years
+      ' Surveillance: Annual
+    }
+  }
+}
+
+package "**AI MANAGEMENT SYSTEM (AIMS) COMPONENTS**" as AIMS #E8F5E9 {
+  rectangle "1. Agent Registry & Governance" as AgentReg {
+    json agent_record {
+      "agent_id": "clinical-review-agent",
+      "version": "v2.3.1",
+      "status": "ACTIVE",
+      "model": "gpt-4o-2024-05-13",
+      "prompt_version": "v1.5",
+      "certification": {
+        "certified_by": "Clinical Team",
+        "certification_date": "2026-05-15",
+        "expiry_date": "2026-08-15",
+        "risk_level": "HIGH",
+        "approval_status": "Production"
+      },
+      "performance": {
+        "accuracy": 0.962,
+        "latency_p95_ms": 3200,
+        "cost_per_request": 0.40
+      },
+      "safety_score": 98.5,
+      "audit_trail": "Full traceability"
+    }
+  }
+  
+  rectangle "2. Prompt Governance" as PromptGov {
+    rectangle "Prompt Registry" as PromptReg {
+      ' ID: prompt-clinical-v1.5
+      ' Version control
+      ' Change management
+      ' A/B testing
+      ' Drift detection
+    }
+    
+    rectangle "Prompt Change Process" as PromptChange {
+      ' 1. Draft new prompt
+      ' 2. Peer review
+      ' 3. Testing (eval framework)
+      ' 4. Approval (governance board)
+      ' 5. Canary deployment
+      ' 6. Full rollout
+    }
+  }
+  
+  rectangle "3. Model Governance" as ModelGovBox {
+    rectangle "Model Card" as ModelCard {
+      ' Model details
+      ' Intended use
+      ' Limitations
+      ' Performance metrics
+      ' Bias analysis
+      ' Fairness assessment
+    }
+    
+    rectangle "Model Monitoring" as ModelMon {
+      ' Performance drift
+      ' Data drift
+      ' Concept drift
+      ' Bias drift
+      ' Alert thresholds
+    }
+  }
+  
+  rectangle "4. Human-in-the-Loop Controls" as HITLBox {
+    rectangle "Risk-Based Routing" as RiskRoute {
+      ' Low (<0.4): Auto-execute
+      ' Medium (0.4-0.75): Supervisor
+      ' High (0.75-0.9): Senior approval
+      ' Critical (>0.9): Board approval
+    }
+    
+    rectangle "Override Tracking" as Override {
+      ' AI decision
+      ' Human decision
+      ' Reason for override
+      ' Pattern analysis
+      ' Continuous learning
+    }
+  }
+  
+  rectangle "5. AI Impact Assessment" as AIIABox {
+    rectangle "AIIA Template" as Template {
+      note right
+        **Agent:** Claims Approval Agent
+        **Purpose:** Automate claim review
+        
+        **Stakeholders:**
+        • Members
+        • Providers
+        • Employees
+        
+        **Potential Harms:**
+        • Wrong rejection
+        • Bias (demographic)
+        • Privacy leakage
+        • Financial impact
+        
+        **Mitigations:**
+        • Human approval >$50K
+        • Confidence threshold >0.95
+        • Comprehensive audit logging
+        • Regular bias testing
+        • PHI protection (Presidio)
+        
+        **Risk Score:** Medium (6/10)
+        **Approval:** Required
+      end note
+    }
+  }
+  
+  rectangle "6. Incident Management" as Incident {
+    rectangle "AI Incident Types" as Types {
+      ' Hallucination incident
+      ' PHI leakage
+      ' Bias incident
+      ' Safety violation
+      ' Performance degradation
+    }
+    
+    rectangle "Incident Response" as Response {
+      ' 1. Detect & Alert
+      ' 2. Triage (severity)
+      ' 3. Contain (disable agent)
+      ' 4. Investigate (root cause)
+      ' 5. Remediate (fix)
+      ' 6. Document (lessons learned)
+      ' 7. Prevent (controls)
+    }
+  }
+}
+
+package "**CONTINUOUS COMPLIANCE**" as COMPLIANCE #FCE4EC {
+  rectangle "Ongoing Monitoring" as Monitor {
+    rectangle "Weekly Reviews" as Weekly {
+      ' Agent performance review
+      ' Hallucination detection
+      ' Override analysis
+      ' Cost review
+    }
+    
+    rectangle "Monthly Governance" as Monthly {
+      ' Governance committee meeting
+      ' Risk register update
+      ' Incident review
+      ' Policy updates
+    }
+    
+    rectangle "Quarterly Audits" as Quarterly {
+      ' Internal audit
+      ' Bias testing
+      ' Red team testing
+      ' Disaster recovery drill
+    }
+    
+    rectangle "Annual Certification" as Annual {
+      ' Surveillance audit
+      ' Re-certification (3 years)
+      ' External assessment
+    }
+  }
+  
+  rectangle "Metrics & KPIs" as KPIs {
+    rectangle "Governance KPIs" as GovKPIs {
+      ' Agent certification rate: 100%
+      ' Prompt approval time: <48 hrs
+      ' Incident response time: <1 hr
+      ' Policy compliance: 99.5%
+      ' Audit findings: 0 critical
+    }
+    
+    rectangle "AI Safety KPIs" as SafetyKPIs {
+      ' Hallucination rate: 1.8%
+      ' PHI leakage incidents: 0
+      ' Prompt injection blocked: 234/mo
+      ' Override rate: 8%
+      ' Human-AI agreement: 92%
+    }
+  }
+}
+
+' Connections
+Committee --> Boards : Oversees
+Boards --> Scope : Defines
+Scope --> Inventory : Identifies AI assets
+Inventory --> Risk : Assesses risks
+Risk --> Policies : Informs policies
+Policies --> Controls : Implements controls
+Controls --> Audit : Audited
+Audit --> Decision : Certification
+
+AgentReg --> Monitor : Monitored
+PromptGov --> Monitor : Monitored
+ModelGovBox --> Monitor : Monitored
+HITLBox --> Incident : Escalates
+Incident --> Monitor : Tracked
+
+Monitor --> KPIs : Measures
+
+note right of Committee
+  **Governance Committee Meetings:**
+  • Frequency: Monthly
+  • Duration: 2 hours
+  • Quorum: 4 of 6 members
+  
+  **Agenda:**
+  1. Review AI incidents
+  2. Approve new agents/prompts
+  3. Review risk register
+  4. Policy updates
+  5. Certification status
+  6. Budget review
+  
+  **Decisions Requiring Approval:**
+  • New high-risk agents
+  • Major prompt changes
+  • Policy updates
+  • Third-party AI vendors
+  • Incident escalations
+end note
+
+note right of AIIA
+  **AIIA Process:**
+  
+  **When Required:**
+  • New AI agent
+  • New use case
+  • Major model change
+  • New data source
+  
+  **Assessment Areas:**
+  1. Business Impact
+  2. Technical Risks
+  3. Regulatory Risks
+  4. Ethical Concerns
+  5. Privacy Risks
+  6. Security Risks
+  7. Bias Risks
+  
+  **Scoring:**
+  • Low: 1-3 (minimal oversight)
+  • Medium: 4-6 (enhanced controls)
+  • High: 7-10 (board approval)
+  
+  **Approval Authority:**
+  • Low: AI Team Lead
+  • Medium: Governance Committee
+  • High: Board + External Ethics
+end note
+
+note right of Lifecycle
+  **Agent Lifecycle Stages:**
+  
+  **1. Development**
+  • Design document
+  • Risk assessment
+  • Security review
+  
+  **2. Testing**
+  • Unit tests
+  • Integration tests
+  • Evaluation framework (15 levels)
+  • Bias testing
+  
+  **3. Approval**
+  • Peer review
+  • Governance approval
+  • Security sign-off
+  • Compliance approval
+  
+  **4. Deployment**
+  • Canary deployment (10%)
+  • Monitor metrics
+  • Full rollout (100%)
+  
+  **5. Monitoring**
+  • Performance tracking
+  • Drift detection
+  • Safety monitoring
+  
+  **6. Retirement**
+  • Deprecation notice (30 days)
+  • Data migration
+  • Documentation archive
+  • Lessons learned
+end note
+
+note bottom
+  **ISO 42001 Certification Status:**
+  
+  **Organization:** HealthCare Insurance Inc.
+  **Certificate #:** ISO42001-2026-001234
+  **Issued:** January 15, 2026
+  **Valid Until:** January 15, 2029
+  **Surveillance Audit:** January 2027, 2028
+  
+  **Certification Body:** BSI Group
+  **Auditor:** Senior AI Systems Auditor
+  
+  **Scope Statement:**
+  "AI Management System for development, 
+  deployment, and operation of multi-agent 
+  AI platform in healthcare insurance 
+  (Prior Authorization use case)"
+  
+  **Certificate Coverage:**
+  ✓ AI Governance Framework
+  ✓ Agent Lifecycle Management
+  ✓ Model Governance
+  ✓ Prompt Governance
+  ✓ Human Oversight Controls
+  ✓ AI Risk Management
+  ✓ Data Governance
+  ✓ Third-Party AI Management
+  ✓ Incident Response
+  ✓ Continuous Improvement
+  
+  **Audit Results:**
+  • Findings: 0 critical, 2 minor
+  • Compliance: 99.2%
+  • Recommendation: Certified
+  
+  **Investment:**
+  • Certification cost: ₹12 Lakhs
+  • Timeline: 7 months
+  • ROI: Enhanced trust, compliance, competitive advantage
+end note
+
+@enduml

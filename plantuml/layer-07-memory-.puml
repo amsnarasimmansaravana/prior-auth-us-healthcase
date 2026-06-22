@@ -1,0 +1,54 @@
+@startuml layer-07-memory-layer
+!theme aws-orange
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 100
+skinparam ranksep 80
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontSize 11
+skinparam componentFontSize 10
+
+title <size:18><b>Layer 7: Memory Layer</b></size>\n<size:14>Working, Episodic, Semantic & Procedural Memory | 500M memory operations/day</size>\n\n
+
+rectangle "**LAYER 7: MEMORY LAYER**" as Layer7 #FFF5E6 {
+    
+    component "working-memory-svc\n(Redis)" as working_memory_svc #F5DEB3
+    component "episodic-memory-svc\n(Redis)" as episodic_memory_svc #F5DEB3
+    component "semantic-memory-svc\n(Redis)" as semantic_memory_svc #F5DEB3
+    component "procedural-memory-svc\n(Redis)" as procedural_memory_svc #F5DEB3
+    
+    note right
+      <b>4 Services</b>
+      500M memory operations/day
+      <10ms memory access
+    end note
+}
+
+database "PostgreSQL" as DB #E74C3C
+database "Redis" as Cache #FF7043
+
+' Connections
+Layer7 -[#0066CC,thickness=2]down-> DB : <b>Data Access</b>
+Layer7 -[#666666,dashed]down-> Cache : <b>Caching</b>
+
+note top of Layer7
+  <b>LAYER 7 METRICS</b>
+  • Services: 4
+  • Volume: 500M memory operations/day
+  • Latency: <10ms memory access
+  • Tech: Redis, PostgreSQL, Milvus, FastAPI
+end note
+
+legend bottom right
+  <b>Layer 7: Memory Layer</b>
+  
+  Services: 4
+  Technology: Redis, PostgreSQL, Milvus, FastAPI
+  Volume: 500M memory operations/day
+  Performance: <10ms memory access
+  
+  Generated: June 02, 2026
+endlegend
+
+@enduml

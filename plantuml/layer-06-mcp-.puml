@@ -1,0 +1,52 @@
+@startuml layer-06-mcp-layer
+!theme aws-orange
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 100
+skinparam ranksep 80
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontSize 11
+skinparam componentFontSize 10
+
+title <size:18><b>Layer 6: MCP Layer</b></size>\n<size:14>Model Context Protocol - Tool Registry & Execution | 45+ tools, 200K+ invocations/day</size>\n\n
+
+rectangle "**LAYER 6: MCP LAYER**" as Layer6 #FFF5E6 {
+    
+    component "mcp-registry-svc\n(MCP SDK (Python))" as mcp_registry_svc #FFDAB9
+    component "tool-executor-svc\n(MCP SDK (Python))" as tool_executor_svc #FFDAB9
+    
+    note right
+      <b>2 Services</b>
+      45+ tools, 200K+ invocations/day
+      <200ms tool execution
+    end note
+}
+
+database "PostgreSQL" as DB #E74C3C
+database "Redis" as Cache #FF7043
+
+' Connections
+Layer6 -[#0066CC,thickness=2]down-> DB : <b>Data Access</b>
+Layer6 -[#666666,dashed]down-> Cache : <b>Caching</b>
+
+note top of Layer6
+  <b>LAYER 6 METRICS</b>
+  • Services: 2
+  • Volume: 45+ tools, 200K+ invocations/day
+  • Latency: <200ms tool execution
+  • Tech: MCP SDK (Python), Docker Sandboxing, gRPC
+end note
+
+legend bottom right
+  <b>Layer 6: MCP Layer</b>
+  
+  Services: 2
+  Technology: MCP SDK (Python), Docker Sandboxing, gRPC
+  Volume: 45+ tools, 200K+ invocations/day
+  Performance: <200ms tool execution
+  
+  Generated: June 02, 2026
+endlegend
+
+@enduml

@@ -1,0 +1,54 @@
+@startuml layer-05-governance-layer
+!theme aws-orange
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 100
+skinparam ranksep 80
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontSize 11
+skinparam componentFontSize 10
+
+title <size:18><b>Layer 5: Governance Layer</b></size>\n<size:14>Agent Registry, Prompt Management, Safety Evaluation | 385,000 governance checks/day</size>\n\n
+
+rectangle "**LAYER 5: GOVERNANCE LAYER**" as Layer5 #FFF5E6 {
+    
+    component "agent-registry-svc\n(FastAPI)" as agent_registry_svc #FFE4B5
+    component "prompt-mgmt-svc\n(FastAPI)" as prompt_mgmt_svc #FFE4B5
+    component "safety-eval-svc\n(FastAPI)" as safety_eval_svc #FFE4B5
+    component "compliance-monitor-svc\n(FastAPI)" as compliance_monitor_svc #FFE4B5
+    
+    note right
+      <b>4 Services</b>
+      385,000 governance checks/day
+      <100ms validation
+    end note
+}
+
+database "PostgreSQL" as DB #E74C3C
+database "Redis" as Cache #FF7043
+
+' Connections
+Layer5 -[#0066CC,thickness=2]down-> DB : <b>Data Access</b>
+Layer5 -[#666666,dashed]down-> Cache : <b>Caching</b>
+
+note top of Layer5
+  <b>LAYER 5 METRICS</b>
+  • Services: 4
+  • Volume: 385,000 governance checks/day
+  • Latency: <100ms validation
+  • Tech: FastAPI, LangSmith, Guardrails AI, PostgreSQL
+end note
+
+legend bottom right
+  <b>Layer 5: Governance Layer</b>
+  
+  Services: 4
+  Technology: FastAPI, LangSmith, Guardrails AI, PostgreSQL
+  Volume: 385,000 governance checks/day
+  Performance: <100ms validation
+  
+  Generated: June 02, 2026
+endlegend
+
+@enduml

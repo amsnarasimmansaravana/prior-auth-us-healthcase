@@ -1,0 +1,66 @@
+@startuml layer-08-rag-retrieval-layer
+!theme aws-orange
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 100
+skinparam ranksep 80
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontSize 11
+skinparam componentFontSize 10
+
+title <size:18><b>Layer 8: RAG Retrieval Layer</b></size>\n<size:14>Hybrid Retrieval - Vector, BM25 & Graph | 50,000 searches/day</size>\n\n
+
+cloud "API Gateway Layer" as APIGW #FFF8DC
+hexagon "Kong AI Gateway\n(Security + Governance)" as KONGGW #F39C12
+hexagon "LiteLLM Gateway\n(Routing + Fallback)" as LITELLMGW #F39C12
+
+rectangle "**LAYER 8: RAG RETRIEVAL LAYER**" as Layer8 #E8F5E9 {
+    
+    component "vector-search-svc\n(Milvus 2.3)" as vector_search_svc #81C784
+    component "hybrid-search-svc\n(Milvus 2.3)" as hybrid_search_svc #81C784
+    component "graph-rag-svc\n(Milvus 2.3)" as graph_rag_svc #81C784
+    
+    note right
+      <b>3 Services</b>
+      50,000 searches/day
+      45-120ms per search
+    end note
+}
+
+database "PostgreSQL" as DB #E74C3C
+database "Redis" as Cache #FF7043
+
+' Connections
+APIGW -[#0066CC,thickness=2]down-> KONGGW : <b>Inbound Traffic</b>
+KONGGW -[#0066CC,thickness=2]down-> LITELLMGW : <b>Policy + Routing</b>
+LITELLMGW -[#0066CC,thickness=2]down-> Layer8 : <b>RAG Model Routing</b>
+Layer8 -[#0066CC,thickness=2]down-> DB : <b>Data Access</b>
+Layer8 -[#666666,dashed]down-> Cache : <b>Caching</b>
+
+note right of KONGGW
+  <b>Gateway Split</b>
+  • Kong AI Gateway: PHI controls, prompt security, audit
+  • LiteLLM Gateway: model selection and fallback for RAG generation
+end note
+
+note top of Layer8
+  <b>LAYER 8 METRICS</b>
+  • Services: 3
+  • Volume: 50,000 searches/day
+  • Latency: 45-120ms per search
+  • Tech: Milvus 2.3, Elasticsearch 8, Neo4j 5.x, Python
+end note
+
+legend bottom right
+  <b>Layer 8: RAG Retrieval Layer</b>
+  
+  Services: 3
+  Technology: Milvus 2.3, Elasticsearch 8, Neo4j 5.x, Python
+  Volume: 50,000 searches/day
+  Performance: 45-120ms per search
+  
+  Generated: June 02, 2026
+endlegend
+
+@enduml

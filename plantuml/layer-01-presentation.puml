@@ -1,0 +1,439 @@
+@startuml layer-01-presentation
+!theme aws-orange
+skinparam componentStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 100
+skinparam ranksep 80
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontSize 11
+skinparam componentFontSize 10
+
+title <size:18><b>Layer 1: Presentation Layer - Channel Services</b></size>\n<size:14>Multi-Channel Intake | 50,000 PA Requests/Day | 6 Services</size>\n\n
+
+' Define colors
+!define WEB_COLOR #4FC3F7
+!define MOBILE_COLOR #29B6F6
+!define PROVIDER_COLOR #0288D1
+!define EDI_COLOR #0277BD
+!define FAX_COLOR #01579B
+!define IVR_COLOR #006064
+
+'===================================================================
+' EXTERNAL ACTORS
+'===================================================================
+actor "Member\n(Patient)" as Member
+actor "Provider\nOffice Staff" as Provider
+actor "Payer\nAdministrator" as Payer
+actor "Phone\nCaller" as Caller
+
+'===================================================================
+' LAYER 1: CHANNEL SERVICES
+'===================================================================
+rectangle "**PRESENTATION LAYER**" as PresentationLayer #F0F8FF {
+
+    '=== WEB PORTAL SERVICE ===
+    component "**Web Portal Service**\n(web-portal-svc)" as WebPortal WEB_COLOR {
+        [React 18.2 + Next.js 14\nTypeScript 5.1] as WebFrontend
+        [Node.js 20 (BFF)\nExpress.js 4.18] as WebBackend
+        [Material-UI 5.14\nReact Hook Form] as WebUI
+        [Socket.io (WebSocket)] as WebSocket
+        
+        WebFrontend -down-> WebBackend : REST API
+        WebBackend -down-> WebSocket : Real-time
+    }
+    
+    '=== MOBILE API SERVICE ===
+    component "**Mobile API Service**\n(mobile-api-svc)" as MobileAPI MOBILE_COLOR {
+        [FastAPI 0.104\nPython 3.11] as MobileFastAPI
+        [Pydantic 2.4\nValidation] as MobileValidation
+        [JWT Auth\nOAuth2] as MobileAuth
+        [FCM + APNS\nPush Notifications] as MobilePush
+        
+        MobileFastAPI -down-> MobileValidation : Data validation
+        MobileFastAPI -down-> MobileAuth : Authentication
+        MobileFastAPI -down-> MobilePush : Notifications
+    }
+    
+    '=== PROVIDER PORTAL SERVICE ===
+    component "**Provider Portal Service**\n(provider-portal-svc)" as ProviderPortal PROVIDER_COLOR {
+        [Angular 16\nTypeScript 5.1] as ProviderFrontend
+        [NestJS 10.2\nNode.js 20] as ProviderBackend
+        [PrimeNG 16\nUI Components] as ProviderUI
+        [NgRx 16\nState Management] as ProviderState
+        
+        ProviderFrontend -down-> ProviderBackend : REST API
+        ProviderFrontend -down-> ProviderState : State mgmt
+    }
+    
+    '=== EDI GATEWAY SERVICE ===
+    component "**EDI Gateway Service**\n(edi-gateway-svc)" as EDIGateway EDI_COLOR {
+        [Go 1.21\nX12 Parser] as EDIParser
+        [HIPAA 5010\nValidator] as EDIValidator
+        [HL7 FHIR R4\nConverter] as EDIConverter
+        [AS2/SFTP/HTTPS\nTransport] as EDITransport
+        
+        EDIParser -down-> EDIValidator : Validate
+        EDIValidator -down-> EDIConverter : Convert to FHIR
+        EDIConverter -down-> EDITransport : Send
+    }
+    
+    '=== FAX OCR SERVICE ===
+    component "**Fax OCR Service**\n(fax-ocr-svc)" as FaxOCR FAX_COLOR {
+        [Python 3.11\nOpenCV 4.8] as FaxProcessor
+        [Azure Form Recognizer\nCustom Models] as FaxOCREngine
+        [Twilio Fax API\nRingCentral] as FaxReceiver
+        [Image Processing\nDeskew + Denoise] as FaxPreprocess
+        
+        FaxReceiver -down-> FaxPreprocess : Pre-process
+        FaxPreprocess -down-> FaxOCREngine : OCR
+        FaxOCREngine -down-> FaxProcessor : Extract data
+    }
+    
+    '=== VOICE IVR SERVICE ===
+    component "**Voice IVR Service**\n(voice-ivr-svc)" as VoiceIVR IVR_COLOR {
+        [Node.js 20\nTypeScript] as IVRBackend
+        [Azure Speech SDK\nSTT + TTS] as IVRSpeech
+        [Twilio Programmable Voice] as IVRTwilio
+        [Azure LUIS\nIntent Recognition] as IVRNLU
+        
+        IVRTwilio -down-> IVRSpeech : Speech processing
+        IVRSpeech -down-> IVRNLU : Intent recognition
+        IVRNLU -down-> IVRBackend : Route call
+    }
+}
+
+'===================================================================
+' DOWNSTREAM LAYERS (SIMPLIFIED)
+'===================================================================
+rectangle "**API GATEWAY LAYER**" as APIGateway #FFF8DC {
+    hexagon "Auth Gateway\n(OAuth2/JWT)" as AuthGW #F39C12
+    hexagon "Rate Limit\nGateway" as RateLimitGW #F39C12
+  hexagon "Kong AI Gateway\n(Security + Governance)" as KongAIGW #F39C12
+  hexagon "LiteLLM Gateway\n(Routing + Fallback)" as LiteLLMGW #F39C12
+}
+
+rectangle "**ORCHESTRATION LAYER**" as Orchestration #E6F7FF {
+    component "Workflow Engine\n(LangGraph)" as WorkflowEngine #4A90E2
+}
+
+'===================================================================
+' DATA STORES
+'===================================================================
+database "PostgreSQL 15\n6 DBs | 6 TB\npa_cases, members,\nproviders" as PostgreSQL #E74C3C
+
+database "Redis 7.0\n26 GB Cluster\nSessions, Cache,\nRate Limits" as Redis #FF7043
+
+database "Azure Blob Storage\n10 TB\nDocuments, PDFs,\nFax Images" as BlobStorage #B71C1C
+
+database "Kafka\nEvent Bus\n6 Brokers\npa.case.created" as Kafka #607D8B
+
+'===================================================================
+' EXTERNAL SYSTEMS
+'===================================================================
+cloud "External Systems" as External {
+    component "Twilio\nFax + Voice" as Twilio #90A4AE
+    component "Azure Speech\nServices" as AzureSpeech #78909C
+    component "Azure Form\nRecognizer" as AzureFormRec #607D8B
+    component "Trading Partners\n(X12 EDI)" as TradingPartners #546E7A
+}
+
+'===================================================================
+' CONNECTIONS: USERS → SERVICES
+'===================================================================
+Member -down-> WebPortal : <b>Web Browser</b>\nHTTPS
+Member -down-> MobileAPI : <b>Mobile App</b>\niOS/Android
+
+Provider -down-> ProviderPortal : <b>Provider Portal</b>\nHTTPS
+Provider -down-> EDIGateway : <b>X12 EDI</b>\n278 Request
+Provider -down-> FaxOCR : <b>Fax</b>\nTIFF/PDF
+
+Payer -down-> WebPortal : <b>Admin Portal</b>\nHTTPS
+
+Caller -down-> VoiceIVR : <b>Phone Call</b>\nPSTN
+
+'===================================================================
+' CONNECTIONS: SERVICES → API GATEWAY
+'===================================================================
+WebPortal -[#0066CC,thickness=2]down-> AuthGW : <b>POST /api/v1/pa/submit</b>\nREST API
+MobileAPI -[#0066CC,thickness=2]down-> AuthGW : <b>POST /api/mobile/v1/pa/submit</b>\nREST API
+ProviderPortal -[#0066CC,thickness=2]down-> AuthGW : <b>POST /api/provider/v1/pa/submit</b>\nREST API
+EDIGateway -[#0066CC,thickness=2]down-> RateLimitGW : <b>X12 → JSON</b>\nConverted
+FaxOCR -[#0066CC,thickness=2]down-> KongAIGW : <b>OCR Results</b>\nJSON
+VoiceIVR -[#0066CC,thickness=2]down-> AuthGW : <b>API Calls</b>\nREST
+
+'===================================================================
+' CONNECTIONS: API GATEWAY → ORCHESTRATION
+'===================================================================
+AuthGW -[#0066CC,thickness=3]down-> WorkflowEngine : <b>Authenticated Requests</b>
+RateLimitGW -[#0066CC,thickness=3]down-> WorkflowEngine : <b>Rate-Limited Requests</b>
+KongAIGW -[#0066CC,thickness=3]down-> LiteLLMGW : <b>LLM Policy + Routing</b>
+LiteLLMGW -down-> WorkflowEngine : <b>Routed Requests</b>
+
+'===================================================================
+' CONNECTIONS: SERVICES → DATABASES
+'===================================================================
+WebBackend -[#666666,dashed]down-> PostgreSQL : <b>Create PA Case</b>\nINSERT
+MobileFastAPI -[#666666,dashed]down-> PostgreSQL : <b>Query Data</b>\nSELECT
+ProviderBackend -[#666666,dashed]down-> PostgreSQL : <b>Bulk Operations</b>\nBATCH INSERT
+
+WebBackend -[#666666,dashed]down-> Redis : <b>Session Store</b>\nSET/GET
+MobileFastAPI -[#666666,dashed]down-> Redis : <b>Cache</b>\nCache-aside
+ProviderBackend -[#666666,dashed]down-> Redis : <b>Rate Limit</b>\nINCR
+
+WebBackend -[#666666,dashed]down-> BlobStorage : <b>Upload Documents</b>\nPUT
+FaxProcessor -[#666666,dashed]down-> BlobStorage : <b>Store Fax Images</b>\nPUT
+
+WebBackend -[#666666,dashed]down-> Kafka : <b>Publish Event</b>\npa.case.created
+MobileFastAPI -[#666666,dashed]down-> Kafka : <b>Publish Event</b>\npa.case.created
+ProviderBackend -[#666666,dashed]down-> Kafka : <b>Publish Event</b>\npa.case.created
+
+'===================================================================
+' CONNECTIONS: SERVICES → EXTERNAL SYSTEMS
+'===================================================================
+FaxReceiver -[#00AA55,dashed]up-> Twilio : <b>Webhook</b>\nInbound Fax
+IVRTwilio -[#00AA55,dashed]up-> Twilio : <b>Voice API</b>\nInbound Call
+
+IVRSpeech -[#00AA55,dashed]up-> AzureSpeech : <b>STT + TTS</b>\nHTTPS
+
+FaxOCREngine -[#00AA55,dashed]up-> AzureFormRec : <b>Form Recognizer API</b>\nHTTPS
+
+EDITransport -[#00AA55,dashed]up-> TradingPartners : <b>AS2/SFTP</b>\nX12 278 Response
+
+'===================================================================
+' ANNOTATIONS
+'===================================================================
+note top of PresentationLayer
+  <b>LAYER 1: PRESENTATION LAYER</b>
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  <b>Services:</b> 6 channel services
+  <b>Daily Volume:</b> 50,000 PA requests
+  <b>Channels:</b> Web, Mobile, Provider, EDI, Fax, IVR
+  <b>Deployment:</b> Azure Kubernetes Service (AKS)
+  <b>Load Balancer:</b> Azure Application Gateway
+  <b>Uptime SLA:</b> 99.95%
+end note
+
+note right of WebPortal
+  <b>WEB PORTAL</b>
+  ━━━━━━━━━━━━━━━━━━
+  • React 18 + Next.js 14
+  • TypeScript 5.1
+  • Material-UI 5.14
+  • WebSocket (Socket.io)
+  • 5-15 replicas (HPA)
+  • 60% of traffic
+  ━━━━━━━━━━━━━━━━━━
+  <b>Endpoints:</b>
+  GET  /
+  GET  /submit-pa
+  POST /api/v1/pa/submit
+  GET  /api/v1/pa/:id
+  ━━━━━━━━━━━━━━━━━━
+  <b>Performance:</b>
+  • Page load: <2s (P95)
+  • API latency: <500ms
+  • Lighthouse: 95+
+end note
+
+note right of MobileAPI
+  <b>MOBILE API</b>
+  ━━━━━━━━━━━━━━━━━━
+  • FastAPI 0.104
+  • Python 3.11
+  • Pydantic validation
+  • JWT authentication
+  • 3-8 replicas
+  • 25% of traffic
+  ━━━━━━━━━━━━━━━━━━
+  <b>Features:</b>
+  • Push notifications
+  • Offline mode
+  • Image compression
+  • Biometric auth
+  ━━━━━━━━━━━━━━━━━━
+  <b>Performance:</b>
+  • Latency: <100ms
+  • Throughput: 5K req/s
+end note
+
+note right of ProviderPortal
+  <b>PROVIDER PORTAL</b>
+  ━━━━━━━━━━━━━━━━━━
+  • Angular 16
+  • NestJS 10.2
+  • PrimeNG 16
+  • NgRx state mgmt
+  • 3-10 replicas
+  • 10% of traffic
+  ━━━━━━━━━━━━━━━━━━
+  <b>Features:</b>
+  • Bulk PA submission
+  • CSV upload (1K PAs)
+  • Analytics dashboard
+  • EHR integration
+  ━━━━━━━━━━━━━━━━━━
+  <b>Performance:</b>
+  • Bulk: 50 PAs/sec
+  • Dashboard: <3s load
+end note
+
+note left of EDIGateway
+  <b>EDI GATEWAY</b>
+  ━━━━━━━━━━━━━━━━━━
+  • Go 1.21
+  • X12 HIPAA 5010
+  • HL7 FHIR R4
+  • AS2/SFTP/HTTPS
+  • 2-5 replicas
+  • 3% of traffic
+  ━━━━━━━━━━━━━━━━━━
+  <b>Transactions:</b>
+  • X12 278 (PA Request)
+  • X12 997 (ACK)
+  • X12 837 (Claims)
+  ━━━━━━━━━━━━━━━━━━
+  <b>Performance:</b>
+  • 2K tx/hour
+  • <500ms latency
+  • <0.1% error rate
+end note
+
+note left of FaxOCR
+  <b>FAX OCR SERVICE</b>
+  ━━━━━━━━━━━━━━━━━━
+  • Python 3.11
+  • Azure Form Recognizer
+  • OpenCV 4.8
+  • Twilio Fax
+  • 2-4 replicas
+  • 1.5% of traffic
+  ━━━━━━━━━━━━━━━━━━
+  <b>Processing:</b>
+  1. Receive fax (TIFF)
+  2. Pre-process image
+  3. Azure OCR
+  4. Extract fields
+  5. Validate data
+  ━━━━━━━━━━━━━━━━━━
+  <b>Accuracy:</b>
+  • Printed: 98.5%
+  • Handwritten: 92%
+  • Time: 15-30s/page
+end note
+
+note left of VoiceIVR
+  <b>VOICE IVR SERVICE</b>
+  ━━━━━━━━━━━━━━━━━━
+  • Node.js 20
+  • Azure Speech SDK
+  • Twilio Voice
+  • Azure LUIS (NLU)
+  • 2-3 replicas
+  • 0.5% of traffic
+  ━━━━━━━━━━━━━━━━━━
+  <b>Features:</b>
+  • STT + TTS
+  • DTMF input
+  • Multi-language (EN/ES)
+  • Agent transfer
+  ━━━━━━━━━━━━━━━━━━
+  <b>Metrics:</b>
+  • 500 concurrent calls
+  • 3 min avg handle time
+  • 68% automation
+  • 94% STT accuracy
+end note
+
+note bottom of PostgreSQL
+  <b>POSTGRESQL OPERATIONS</b>
+  ━━━━━━━━━━━━━━━━━━━━━━━━
+  • Create PA cases (INSERT INTO pa_cases)
+  • Store member/provider data
+  • Audit trail (case_events table)
+  • 50K writes/day
+  • Connection pooling (PgBouncer)
+end note
+
+note bottom of Redis
+  <b>REDIS OPERATIONS</b>
+  ━━━━━━━━━━━━━━━━━━━━━━━━
+  • Session storage (TTL: 30 min)
+  • Cache layer (75% hit rate)
+  • Rate limiting (token bucket)
+  • Working memory
+  • 500M ops/day
+end note
+
+note bottom of BlobStorage
+  <b>BLOB STORAGE</b>
+  ━━━━━━━━━━━━━━━━━━━━━━━━
+  • Documents (PDF, DOCX)
+  • Fax images (TIFF, PNG)
+  • Decision letters
+  • 150K uploads/day
+  • AES-256 encryption
+end note
+
+note bottom of Kafka
+  <b>KAFKA EVENTS</b>
+  ━━━━━━━━━━━━━━━━━━━━━━━━
+  <b>Topics:</b>
+  • pa.case.created
+  • pa.document.uploaded
+  • pa.status.updated
+  
+  <b>Producers:</b> All 6 services
+  <b>Consumers:</b> Workflow Engine
+  <b>Throughput:</b> 50K events/day
+end note
+
+'===================================================================
+' LEGEND
+'===================================================================
+legend bottom right
+  <b>═══════════════════════════════════════════════════</b>
+  <b>PRESENTATION LAYER - CHANNEL SERVICES</b>
+  <b>═══════════════════════════════════════════════════</b>
+  
+  |= Service |= Technology |= Port |= Traffic % |
+  | Web Portal | React 18 + Next.js 14 | 3000 | 60% |
+  | Mobile API | FastAPI (Python) | 8001 | 25% |
+  | Provider Portal | Angular 16 + NestJS | 3001 | 10% |
+  | EDI Gateway | Go 1.21 + X12 | 8002 | 3% |
+  | Fax OCR | Python + Azure OCR | 8003 | 1.5% |
+  | Voice IVR | Node.js + Azure Speech | 8004 | 0.5% |
+  
+  <b>Traffic Distribution:</b>
+  • Total: 50,000 PA requests/day
+  • Peak: 2,500 requests/hour
+  • Channels: Web (30K), Mobile (12.5K), Provider (5K), EDI (1.5K), Fax (750), IVR (250)
+  
+  <b>Deployment:</b>
+  • Platform: Azure Kubernetes Service (AKS)
+  • Namespace: presentation-layer
+  • Ingress: nginx-ingress + Azure App Gateway
+  • Scaling: Horizontal Pod Autoscaler (HPA)
+  
+  <b>Performance SLAs:</b>
+  • Uptime: 99.95%
+  • Web latency: <2s page load (P95)
+  • API latency: <500ms (P95)
+  • OCR accuracy: 98.5% (printed), 92% (handwritten)
+  • STT accuracy: 94%
+  
+  <b>Security:</b>
+  • TLS 1.3 (in transit)
+  • AES-256 (at rest)
+  • OAuth 2.0 + JWT
+  • HIPAA compliant
+  
+  <b>Connection Types:</b>
+  • <color:blue>━━━</color> Main workflow path (thick blue)
+  • - - - Secondary connections (dashed gray)
+  • <color:green>- - -</color> External integrations (dashed green)
+  
+  <size:9><i>Last Updated: June 2026 | Version: 1.0</i></size>
+endlegend
+
+@enduml

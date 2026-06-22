@@ -1,0 +1,108 @@
+@startuml
+!theme plain
+title Kong Worker Tuning - Request Processing Pipeline Optimization
+
+top to bottom direction
+
+rectangle "CURRENT PIPELINE (185ms)" as Current #FFE6E6 {
+  component "http-log\n(2ms)" as C_Log
+  component "cors\n(3ms)" as C_CORS
+  component "key-auth\n(5ms)" as C_KeyAuth
+  component "jwt\n(8ms)" as C_JWT
+  component "acl\n(10ms)" as C_ACL
+  component "rate-limiting\n(15ms)" as C_RateLimit
+  component "opa\n(48ms)\nBOTTLENECK" as C_OPA
+  component "ai-proxy\n(12ms)" as C_Proxy
+  component "upstream+network\n(82ms)" as C_Upstream
+  
+  C_Log --> C_CORS
+  C_CORS --> C_KeyAuth
+  C_KeyAuth --> C_JWT
+  C_JWT --> C_ACL
+  C_ACL --> C_RateLimit
+  C_RateLimit --> C_OPA
+  C_OPA --> C_Proxy
+  C_Proxy --> C_Upstream
+}
+
+rectangle "OPTIMIZED PIPELINE (95ms) - 49% Reduction" as Optimized #E6FFE6 {
+  rectangle "PHASE 1\nParallel\n(5ms)" as O_Phase1 {
+    component "http-log\n(async)" as O_Log
+    component "cors\n(1ms)" as O_CORS
+    component "key-auth\n(4ms)" as O_KeyAuth
+  }
+  
+  rectangle "PHASE 2\nCache-Hit Path\n(8ms)" as O_Phase2 {
+    component "jwt (cached)\n(2ms)" as O_JWT
+    component "acl (cached)\n(3ms)" as O_ACL
+    component "rate-limiting\n(3ms)" as O_RateLimit
+  }
+  
+  rectangle "PHASE 3\nOPA + Routing\n(40ms)" as O_Phase3 {
+    component "opa (cached)\n(8ms)\n85% hit" as O_OPA
+    component "ai-proxy\n(12ms)" as O_Proxy
+    component "proxy routing\n(20ms)" as O_ProxyRoute
+  }
+  
+  rectangle "PHASE 4\nUpstream Response\n(42ms)" as O_Phase4 {
+    component "upstream\nresponse" as O_Upstream
+  }
+  
+  O_Phase1 -[thickness=3]down-> O_Phase2
+  O_Phase2 -[thickness=3]down-> O_Phase3
+  O_Phase3 -[thickness=3]down-> O_Phase4
+}
+
+current -[hidden]- optimized
+
+rectangle "CONFIGURATION CHANGES" as Config #E6F0FF {
+  component "Worker Processes" as Config1
+  note right of Config1
+    8 cores → 8 workers
+    (not 16 - reduces context switch)
+  end note
+  
+  component "Buffer Pool" as Config2
+  note right of Config2
+    4m → 8m pre-allocation
+    Reduces allocation latency
+  end note
+  
+  component "HTTP/2" as Config3
+  note right of Config3
+    Enable multiplexing
+    Request pipelining
+  end note
+  
+  component "Keepalive" as Config4
+  note right of Config4
+    Increase to 100 requests
+    Reduce connection overhead
+  end note
+}
+
+rectangle "CACHING STRATEGY" as CacheStrat #FFF0E6 {
+  component "JWT Cache\n(900s TTL)" as CacheJWT
+  component "ACL Cache\n(300s TTL)" as CacheACL
+  component "OPA Cache\n(300s TTL)" as CacheOPA
+  
+  note bottom of CacheJWT
+    JWT validation: 8ms → 2ms
+    Cache hit: 75%
+  end note
+  
+  note bottom of CacheACL
+    ACL lookup: 10ms → 3ms
+    Cache hit: 85%
+  end note
+  
+  note bottom of CacheOPA
+    OPA decision: 48ms → 8ms
+    Cache hit: 85%
+  end note
+}
+
+optimized -[hidden]- config
+config -[hidden]- cachestrat
+
+@enduml

@@ -1,0 +1,431 @@
+@startuml 12-complete-microservice-architecture
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam defaultTextAlignment center
+skinparam wrapWidth 200
+skinparam maxMessageSize 150
+skinparam BoxPadding 10
+skinparam ParticipantPadding 15
+skinparam SequenceMessageAlign center
+
+title Healthcare Insurance PA Platform - Complete Microservice Architecture\nEnd-to-End Flow with All Components (55+ Services, 6 Databases, 11 AI Agents)
+
+actor "Provider\nOffice Staff" as Provider
+participant "Web Portal\n(React)" as Portal #LightBlue
+box "API Gateway Layer (Kong Enterprise)" #LightGray
+    participant "Auth\nGateway" as AuthGW
+    participant "Rate Limit\nGateway" as RateLimitGW
+    participant "LLM\nGateway" as LLMGW
+end box
+
+box "Orchestration Layer" #LightGreen
+    participant "Workflow\nEngine\n(LangGraph)" as Workflow
+    participant "Temporal\nServer" as Temporal
+end box
+
+box "AI Agent Layer (11 Agents)" #LightYellow
+    participant "Intake\nAgent\n(GPT-4o Vision)" as IntakeAgent
+    participant "Eligibility\nAgent\n(GPT-3.5)" as EligAgent
+    participant "Benefits\nAgent\n(GPT-4o)" as BenefitsAgent
+    participant "Clinical\nAgent\n(GPT-4o + RAG)" as ClinicalAgent
+    participant "Policy\nAgent\n(Claude 3.5)" as PolicyAgent
+    participant "Fraud\nAgent\n(Neo4j + ML)" as FraudAgent
+    participant "Decision\nAgent\n(GPT-4o)" as DecisionAgent
+    participant "Notification\nAgent" as NotifyAgent
+end box
+
+box "Data Services Layer (8 Services)" #LightCyan
+    participant "Member\nService" as MemberSvc
+    participant "Provider\nService" as ProviderSvc
+    participant "Policy\nService" as PolicySvc
+    participant "Benefits\nConfig\nService" as BenefitsSvc
+    participant "Clinical\nContent\nService" as ClinicalSvc
+end box
+
+box "RAG Services Layer" #Wheat
+    participant "Vector\nSearch\n(Milvus)" as VectorSearch
+    participant "Hybrid\nSearch\n(Elasticsearch)" as HybridSearch
+    participant "Graph\nRAG\n(Neo4j)" as GraphRAG
+end box
+
+box "Database Layer (6 Systems)" #MistyRose
+    database "PostgreSQL\n(6 TB)\n6 databases\n30+ tables" as PostgreSQL
+    database "Redis\n(26 GB)\nCache + State" as Redis
+    database "Milvus\n(1.2 TB)\n10M vectors" as Milvus
+    database "Neo4j\n(200 GB)\nKnowledge Graph" as Neo4j
+    database "Elasticsearch\n(400 GB)\nFull-text Search" as Elasticsearch
+    database "Azure Blob\n(10 TB)\nDocuments" as BlobStorage
+end box
+
+database "Kafka\nEvent Bus" as Kafka
+
+== PHASE 1: INTAKE & DOCUMENT PROCESSING (2 minutes) ==
+
+Provider -> Portal: 1. Submit PA Request\n(Upload PDF, clinical notes)\nHTTPS POST /api/v1/pa/submit
+activate Portal
+
+Portal -> AuthGW: 2. Authenticate\nOAuth2 JWT token
+activate AuthGW
+AuthGW -> Redis: Validate session\nGET session:{token}
+AuthGW --> Portal: Authenticated ✓
+deactivate AuthGW
+
+Portal -> RateLimitGW: 3. Check rate limit
+activate RateLimitGW
+RateLimitGW -> Redis: INCR ratelimit:{client_id}
+RateLimitGW --> Portal: Allowed (23/100)
+deactivate RateLimitGW
+
+Portal -> BlobStorage: 4. Upload documents\nPUT physician_order.pdf\n(2.5 MB)
+activate BlobStorage
+BlobStorage --> Portal: Blob URL
+deactivate BlobStorage
+
+Portal -> PostgreSQL: 5. Create PA case\nINSERT INTO pa_cases\ncase_id='PA-2026-123456'
+activate PostgreSQL
+PostgreSQL --> Portal: Case created ✓
+deactivate PostgreSQL
+
+Portal -> Kafka: 6. Publish event\nTopic: pa.case.created
+activate Kafka
+Kafka --> Portal: Event queued
+deactivate Kafka
+
+Portal --> Provider: PA Request Submitted\nCase ID: PA-2026-123456\n(T+170ms)
+deactivate Portal
+
+Kafka -> Workflow: 7. Consume event\npa.case.created
+activate Workflow
+
+Workflow -> Redis: 8. Initialize state\nSETEX working_memory:{case_id}
+activate Redis
+Redis --> Workflow: State stored
+deactivate Redis
+
+Workflow -> Temporal: 9. Start workflow\nPAWorkflow\nTimeout: 30 min
+activate Temporal
+Temporal -> PostgreSQL: Persist workflow state
+Temporal --> Workflow: Workflow started
+deactivate Temporal
+
+Workflow -> IntakeAgent: 10. Invoke Intake Agent\ngRPC call
+activate IntakeAgent
+
+IntakeAgent -> BlobStorage: Fetch document\nphysician_order.pdf
+activate BlobStorage
+BlobStorage --> IntakeAgent: PDF content (2.5 MB)
+deactivate BlobStorage
+
+IntakeAgent -> LLMGW: 11. LLM Call #1:\nDocument Classification\n"Classify this document"
+activate LLMGW
+LLMGW -> Redis: Check cache\nGET llm_cache:{hash}
+LLMGW --> LLMGW: Cache MISS
+LLMGW -> LLMGW: Route to GPT-4o Vision
+note right: OpenAI API\ngpt-4o-2024-05-13\nTemp: 0.0\nTokens: 500\n2.1s latency
+LLMGW --> IntakeAgent: {type: "physician_order",\nconfidence: 0.98}
+deactivate LLMGW
+
+IntakeAgent -> IntakeAgent: 12. Azure Form Recognizer\nOCR processing\n3.5s latency
+note right: Extract:\n- member_id: M-987654321\n- provider_npi: 1234567890\n- diagnosis: M54.5\n- procedure: 72148\n- clinical notes
+
+IntakeAgent -> LLMGW: 13. LLM Call #2:\nEntity Extraction\nStructured output (Pydantic)
+activate LLMGW
+LLMGW -> LLMGW: GPT-4o\nTemp: 0.1\nTokens: 2000\n1.8s
+LLMGW --> IntakeAgent: Extracted entities JSON
+deactivate LLMGW
+
+IntakeAgent -> PostgreSQL: 14. Store extracted data\nUPDATE pa_cases\nSET extracted_data=...
+activate PostgreSQL
+PostgreSQL --> IntakeAgent: Updated ✓
+deactivate PostgreSQL
+
+IntakeAgent -> Redis: 15. Update working memory\nHSET agents:intake_agent
+activate Redis
+Redis --> IntakeAgent: Stored
+deactivate Redis
+
+IntakeAgent --> Workflow: Intake complete ✓\n(T+7.6s)
+deactivate IntakeAgent
+
+== PHASE 2: ELIGIBILITY VERIFICATION (15 seconds) ==
+
+Workflow -> EligAgent: 16. Invoke Eligibility Agent
+activate EligAgent
+
+EligAgent -> MemberSvc: 17. Get member data\ngRPC MemberService/GetMember\nmember_id='M-987654321'
+activate MemberSvc
+
+MemberSvc -> Redis: 18. Cache check\nGET cache:member:{id}
+activate Redis
+Redis --> MemberSvc: Cache HIT ✓\n(2ms, TTL: 2400s)
+deactivate Redis
+
+MemberSvc --> EligAgent: Member data:\n{name, dob, plan_id,\nenrollment_status: "Active"}
+deactivate MemberSvc
+
+EligAgent -> PostgreSQL: 19. COB check\nSELECT * FROM\ncoordination_of_benefits
+activate PostgreSQL
+PostgreSQL --> EligAgent: No secondary insurance
+deactivate PostgreSQL
+
+EligAgent -> LLMGW: 20. LLM Call #3:\nEligibility Decision\nGPT-3.5 Turbo (0.8s)
+activate LLMGW
+LLMGW --> EligAgent: {eligible: true,\nreason: "Active enrollment"}
+deactivate LLMGW
+
+EligAgent -> Redis: 21. Store result
+activate Redis
+Redis --> EligAgent: Stored
+deactivate Redis
+
+EligAgent --> Workflow: Eligible ✓ (T+8.4s)
+deactivate EligAgent
+
+== PHASE 3: BENEFITS DETERMINATION (20 seconds) ==
+
+Workflow -> BenefitsAgent: 22. Invoke Benefits Agent
+activate BenefitsAgent
+
+BenefitsAgent -> PolicySvc: 23. Get policy\nGET /policies/PLAN-2024-GOLD
+activate PolicySvc
+PolicySvc -> PostgreSQL: SELECT * FROM plan_policies
+activate PostgreSQL
+PostgreSQL --> PolicySvc: Policy rules (15 KB JSON)
+deactivate PostgreSQL
+PolicySvc --> BenefitsAgent: Policy data
+deactivate PolicySvc
+
+BenefitsAgent -> BenefitsSvc: 24. Get benefits config\nGET /benefits/{plan}/MRI
+activate BenefitsSvc
+BenefitsSvc -> PostgreSQL: SELECT copay, coinsurance,\ndeductible, oop_max
+activate PostgreSQL
+PostgreSQL --> BenefitsSvc: {copay: 0, coinsurance: 0.20,\ndeductible: 2000, oop_max: 8000}
+deactivate PostgreSQL
+BenefitsSvc --> BenefitsAgent: Benefits config
+deactivate BenefitsSvc
+
+BenefitsAgent -> LLMGW: 25. LLM Call #4:\nCost Calculation\nGPT-4o with code interpreter
+activate LLMGW
+LLMGW --> BenefitsAgent: {estimated_charge: 1500,\nmember_responsibility: 940,\nplan_pays: 560}
+deactivate LLMGW
+
+BenefitsAgent -> ProviderSvc: 26. Network tier check\nGET /network/check?npi=...
+activate ProviderSvc
+ProviderSvc -> PostgreSQL: SELECT tier FROM\nnetwork_contracts
+activate PostgreSQL
+PostgreSQL --> ProviderSvc: {tier: "In-Network Tier 1"}
+deactivate PostgreSQL
+ProviderSvc --> BenefitsAgent: Network tier
+deactivate ProviderSvc
+
+BenefitsAgent -> Redis: 27. Store decision
+BenefitsAgent --> Workflow: Benefits approved ✓\n(T+10.7s)
+deactivate BenefitsAgent
+
+== PHASE 4: CLINICAL REVIEW WITH RAG (8 minutes - BOTTLENECK) ==
+
+Workflow -> ClinicalAgent: 28. Invoke Clinical Agent
+activate ClinicalAgent
+
+ClinicalAgent -> LLMGW: 29. LLM Call #5:\nGenerate search query\n"MRI lumbar spine medical necessity..."
+activate LLMGW
+LLMGW --> ClinicalAgent: Search query string (1.2s)
+deactivate LLMGW
+
+ClinicalAgent -> LLMGW: 30. Generate embedding\ntext-embedding-ada-002
+activate LLMGW
+LLMGW --> ClinicalAgent: 1536-dim vector (0.3s)
+deactivate LLMGW
+
+par Parallel RAG Retrieval
+    ClinicalAgent -> VectorSearch: 31a. Vector search\nsearch(query_embedding,\nlimit=20)
+    activate VectorSearch
+    VectorSearch -> Milvus: HNSW search\nCOSINE similarity
+    activate Milvus
+    Milvus --> VectorSearch: Top 20 guidelines\n(45ms, scores: 0.92, 0.89...)
+    deactivate Milvus
+    VectorSearch --> ClinicalAgent: Vector results
+    deactivate VectorSearch
+else
+    ClinicalAgent -> HybridSearch: 31b. BM25 search\nmulti_match query
+    activate HybridSearch
+    HybridSearch -> Elasticsearch: Full-text search\nfields: [guideline_text^2,\nspecialty]
+    activate Elasticsearch
+    Elasticsearch --> HybridSearch: Top 20 guidelines\n(85ms, BM25 scores)
+    deactivate Elasticsearch
+    HybridSearch --> ClinicalAgent: BM25 results
+    deactivate HybridSearch
+else
+    ClinicalAgent -> GraphRAG: 31c. Graph traversal\nCypher query
+    activate GraphRAG
+    GraphRAG -> Neo4j: MATCH (Diagnosis)\n-[:REQUIRES]->\n(Procedure)\n-[:HAS_CRITERIA]->\n(Guideline)
+    activate Neo4j
+    Neo4j --> GraphRAG: 5 guidelines\n(120ms)
+    deactivate Neo4j
+    GraphRAG --> ClinicalAgent: Graph results
+    deactivate GraphRAG
+end
+
+ClinicalAgent -> ClinicalAgent: 32. Reciprocal Rank Fusion\nMerge 45 results → Top 10\nRRF score = Σ(1/(k+rank))\nk=60, 15ms
+note right: Top 10 reranked:\n- MCG-A-0582 (0.035)\n- IQ-OP-123 (0.031)\n- ...
+
+ClinicalAgent -> ClinicalSvc: 33. Retrieve full text\nGET /guidelines?ids=[...]
+activate ClinicalSvc
+ClinicalSvc -> PostgreSQL: SELECT guideline_text\nFROM clinical_guidelines\nWHERE id IN (...)
+activate PostgreSQL
+PostgreSQL --> ClinicalSvc: 10 guidelines\n(~15,000 tokens, 45ms)
+deactivate PostgreSQL
+ClinicalSvc --> ClinicalAgent: Full guideline texts
+deactivate ClinicalSvc
+
+ClinicalAgent -> LLMGW: 34. LLM Call #6:\nMedical Necessity Review\nGPT-4o 128k context\nPrompt: "Based on these\nguidelines, determine if\nMRI is medically necessary..."
+activate LLMGW
+note right: Input:\n- 15,000 tokens (guidelines)\n- Clinical summary\n- Patient demographics\nTemp: 0.2\nMax tokens: 2000\nLatency: 4.5s
+LLMGW --> ClinicalAgent: {decision: "Approve",\nrationale: "Patient meets\nMCG A-0582 criteria:\n6+ weeks conservative\ntreatment failure,\nradicular symptoms...",\nguidelines_cited:\n["MCG-A-0582", "IQ-OP-123"],\nconfidence: 0.94}
+deactivate LLMGW
+
+ClinicalAgent -> ClinicalAgent: 35. Guardrails AI\nHallucination check\nSemantic similarity\nvs source guidelines\n1.2s
+note right: Safety evaluation:\n- No hallucination detected\n- Confidence: 0.96\n- Citations verified ✓
+
+ClinicalAgent -> PostgreSQL: 36. Store decision
+activate PostgreSQL
+PostgreSQL --> ClinicalAgent: Stored
+deactivate PostgreSQL
+
+ClinicalAgent -> Redis: 37. Update state
+ClinicalAgent --> Workflow: Medical necessity\napproved ✓ (T+18.1s)
+deactivate ClinicalAgent
+
+== PHASE 5: POLICY & FRAUD ANALYSIS (Parallel, 3 minutes) ==
+
+par Policy & Fraud in Parallel
+    Workflow -> PolicyAgent: 38. Invoke Policy Agent
+    activate PolicyAgent
+    PolicyAgent -> PolicyAgent: Claude 3.5 Sonnet\nPolicy compliance check\nSearch exclusions,\nstep therapy, PA rules\n2.5 minutes
+    PolicyAgent --> Workflow: Policy compliant ✓
+    deactivate PolicyAgent
+else
+    Workflow -> FraudAgent: 39. Invoke Fraud Agent
+    activate FraudAgent
+    FraudAgent -> Neo4j: Cypher query:\nProvider billing patterns\nCompare to peer group
+    activate Neo4j
+    Neo4j --> FraudAgent: Statistics:\nclaim_count, avg_amount,\npeer comparison (200ms)
+    deactivate Neo4j
+    FraudAgent -> FraudAgent: Isolation Forest\nAnomaly detection ML\nFeatures: [claim_count,\navg_amount, stddev]\n10ms
+    FraudAgent --> Workflow: {fraud_risk: "Low",\nscore: 0.12}
+    deactivate FraudAgent
+end
+
+== PHASE 6: FINAL DECISION (1 minute) ==
+
+Workflow -> DecisionAgent: 40. Invoke Decision Agent
+activate DecisionAgent
+
+DecisionAgent -> Redis: 41. Retrieve all agent results\nHGETALL agents
+activate Redis
+Redis --> DecisionAgent: 7 agent outputs:\n- Intake ✓\n- Eligibility ✓\n- Benefits ✓\n- Clinical ✓\n- Policy ✓\n- Fraud ✓\n- COM ✓
+deactivate Redis
+
+DecisionAgent -> LLMGW: 42. LLM Call #12:\nAggregate decision\nGPT-4o synthesis
+activate LLMGW
+note right: Prompt:\n"Synthesize final PA decision\nfrom 7 agent outputs..."\nAll checks passed ✓
+LLMGW --> DecisionAgent: {decision: "APPROVED",\nconfidence: 0.94,\nauth_number:\n"AUTH-2026-123456",\nvalid_through:\n"2026-09-01",\nrequires_human_review:\nfalse}
+deactivate LLMGW
+
+DecisionAgent -> DecisionAgent: 43. HITL Routing\nDrools rules engine:\n- confidence < 0.85?\n  → NO (0.94)\n- fraud_risk > 0.30?\n  → NO (0.12)\n- decision = DENIED?\n  → NO (APPROVED)\nResult: Skip human review
+note right: Risk-based routing:\n✓ High confidence\n✓ Low fraud risk\n✓ Approved decision\n→ No human review needed
+
+DecisionAgent -> PostgreSQL: 44. Update case\nUPDATE pa_cases\nSET decision='APPROVED',\nauth_number='AUTH-2026-123456',\nstatus='completed'
+activate PostgreSQL
+PostgreSQL --> DecisionAgent: Updated ✓
+deactivate PostgreSQL
+
+DecisionAgent --> Workflow: Final decision: APPROVED ✓\n(T+14m 30s)
+deactivate DecisionAgent
+
+== PHASE 7: NOTIFICATION & AUDIT (1 minute) ==
+
+Workflow -> NotifyAgent: 45. Invoke Notification Agent
+activate NotifyAgent
+
+NotifyAgent -> NotifyAgent: 46. Generate PDF\nJinja2 template +\nWeasyPrint\nDecision letter (125 KB)\n1.2s
+
+NotifyAgent -> BlobStorage: 47. Store PDF\nPUT decision letter\n/decisions/2026/06/\nPA-2026-123456-decision.pdf
+activate BlobStorage
+BlobStorage --> NotifyAgent: PDF URL
+deactivate BlobStorage
+
+NotifyAgent -> NotifyAgent: 48. Send email\nSendGrid API\nTo: provider, member\nAttach: decision.pdf\n350ms
+
+NotifyAgent -> Portal: 49. WebSocket push\nReal-time notification\n"Your PA was approved"\n50ms
+
+NotifyAgent -> Kafka: 50. Publish event\npa.case.completed
+activate Kafka
+Kafka --> NotifyAgent: Published
+deactivate Kafka
+
+NotifyAgent --> Workflow: Notifications sent ✓
+deactivate NotifyAgent
+
+Workflow -> PostgreSQL: 51. Audit trail\nINSERT INTO case_events\n+ Blockchain (Hyperledger)
+activate PostgreSQL
+PostgreSQL --> Workflow: Logged ✓
+deactivate PostgreSQL
+
+Workflow -> Temporal: 52. Complete workflow\nStatus: COMPLETED\nDuration: 14m 32s
+activate Temporal
+Temporal --> Workflow: Finalized
+deactivate Temporal
+
+Workflow --> Provider: 53. PA APPROVED ✓\nAuth#: AUTH-2026-123456\nValid through: 2026-09-01\n(via email + portal)
+deactivate Workflow
+
+note over Provider, BlobStorage
+**WORKFLOW COMPLETE**
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+**Business Outcome**: PA Request Approved
+**Technical Metrics**:
+- Total duration: 14 minutes 32 seconds (under 30-min SLA)
+- Microservices invoked: 27+ services
+- AI agents executed: 7 agents
+- LLM calls: 12 (5 GPT-4o, 6 GPT-3.5, 1 Claude)
+- Total tokens: 47,523 tokens
+- LLM cost: $0.95
+- Database queries: 38 queries
+- Cache hits: 12 (75% hit rate)
+- Databases accessed: All 6 systems
+- Automation: 100% (no human review needed)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+end note
+
+legend right
+|= Component |= Technology |= Purpose |
+| **Presentation** | React, Node.js | Web UI, Mobile API |
+| **API Gateway** | Kong Enterprise | Auth, Rate Limit, LLM routing |
+| **Orchestration** | LangGraph, Temporal | Multi-agent workflow, durability |
+| **AI Agents (11)** | GPT-4o, Claude 3.5, GPT-3.5 | Decision automation |
+| **Data Services (8)** | FastAPI, gRPC | Member, Claims, Policy APIs |
+| **RAG Services** | Milvus, Elasticsearch, Neo4j | Hybrid retrieval |
+| **Databases (6)** | PostgreSQL, Redis, Milvus, Neo4j, ES, Blob | Multi-database architecture |
+| **Event Bus** | Apache Kafka | Async messaging |
+
+|= Phase |= Duration |= % of Total |
+| Intake (OCR + LLM) | 2 min | 13% |
+| Eligibility | 15 sec | 2% |
+| Benefits | 20 sec | 2% |
+| **Clinical (RAG)** | **8 min** | **53%** ← Bottleneck |
+| Policy | 2.5 min | 17% |
+| Fraud | 45 sec | 5% |
+| Decision | 30 sec | 3% |
+| Notification | 1 min | 5% |
+| **TOTAL** | **~15 min** | **100%** |
+
+**Platform Scale**:
+- 50,000 PA requests/day
+- 72% automation rate (28% human review)
+- 96% accuracy
+- 99.95% uptime
+- $667M annual ROI
+endlegend
+
+@enduml

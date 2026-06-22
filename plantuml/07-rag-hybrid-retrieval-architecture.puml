@@ -1,0 +1,447 @@
+@startuml RAG Architecture - Hybrid Retrieval
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Arial
+
+title Healthcare Insurance Multi-Agent AI Platform\nRAG Architecture - Hybrid Retrieval System\n(Vector + Keyword + Knowledge Graph)
+
+actor "Clinical Agent" as Agent
+
+package "Query Processing Layer" {
+  rectangle "Query Analysis" as QueryAnalysis #E3F2FD {
+    ' Query understanding
+    ' Intent detection
+    ' Entity extraction
+    ' Query expansion
+  }
+  
+  rectangle "Query Rewriting" as Rewrite #FFF3E0 {
+    ' Synonym expansion
+    ' Medical term normalization
+    ' Acronym expansion
+  }
+}
+
+package "Retrieval Layer" {
+  rectangle "**Retrieval Strategy Router**" as Router #E8F5E9 {
+    ' Query type classification
+    ' Strategy selection
+    ' Metadata filters
+  }
+  
+  package "Parallel Retrieval" {
+    rectangle "**Vector Search**\n(Semantic)" as Vector #E3F2FD {
+      rectangle "Embedding Generation" as Embed {
+        ' Model: BGE-large-en-v1.5
+        ' Dimension: 1024
+        ' Batch size: 32
+      }
+      
+      rectangle "Milvus Vector DB" as Milvus {
+        database "Clinical Guidelines\n(5M vectors)" as ClinicalVec
+        database "Policy Documents\n(2M vectors)" as PolicyVec
+        database "Case History\n(10M vectors)" as CaseVec
+      }
+      
+      rectangle "Cosine Similarity Search" as Cosine {
+        ' Top-K: 100
+        ' Threshold: 0.7
+        ' HNSW index
+      }
+    }
+    
+    rectangle "**Keyword Search**\n(Lexical)" as Keyword #FFF3E0 {
+      rectangle "BM25 Indexer" as BM25 {
+        ' Elasticsearch
+        ' TF-IDF scoring
+        ' Field boosting
+      }
+      
+      rectangle "Full-Text Search" as FTS {
+        ' Top-K: 100
+        ' Fuzzy matching
+        ' Phrase matching
+      }
+    }
+    
+    rectangle "**Knowledge Graph**\n(Structured)" as KG #E8F5E9 {
+      rectangle "Neo4j Graph DB" as Neo4j {
+        database "Disease Ontology" as Disease
+        database "Drug Interactions" as Drug
+        database "Provider Networks" as Provider
+      }
+      
+      rectangle "Graph Traversal" as Traversal {
+        ' Cypher queries
+        ' Multi-hop relationships
+        ' Pathfinding
+      }
+    }
+  }
+}
+
+package "Fusion & Ranking Layer" {
+  rectangle "**Result Fusion**" as Fusion #FCE4EC {
+    ' Reciprocal Rank Fusion (RRF)
+    ' Score normalization
+    ' Duplicate removal
+  }
+  
+  rectangle "**Metadata Filtering**" as Filter #F3E5F5 {
+    ' Document type filter
+    ' Date range filter
+    ' Organization filter
+    ' Relevance threshold
+  }
+  
+  rectangle "**Reranking**" as Rerank #E0F2F1 {
+    rectangle "Cross-Encoder" as CrossEncoder {
+      ' Model: ms-marco-MiniLM
+      ' Query-document pairs
+      ' Precise relevance scoring
+    }
+    
+    rectangle "Diversity Filter" as Diversity {
+      ' MMR (Maximal Marginal Relevance)
+      ' Avoid redundancy
+      ' Ensure coverage
+    }
+  }
+}
+
+package "Context Preparation Layer" {
+  rectangle "**Context Compression**" as Compression #FFF9C4 {
+    rectangle "LLMLingua" as Lingua {
+      ' Token reduction
+      ' Preserve key information
+      ' Compression ratio: 50%
+    }
+    
+    rectangle "Chunking Optimizer" as ChunkOpt {
+      ' Semantic chunking
+      ' Overlap: 20%
+      ' Max chunk: 512 tokens
+    }
+  }
+  
+  rectangle "**Citation Tracking**" as Citation #E1F5FE {
+    ' Source document ID
+    ' Page number
+    ' Confidence score
+    ' Retrieval timestamp
+  }
+}
+
+package "LLM Integration Layer" {
+  rectangle "**Prompt Construction**" as Prompt #FFEBEE {
+    ' System prompt
+    ' Retrieved context
+    ' User query
+    ' Few-shot examples
+  }
+  
+  rectangle "**GPT-4o LLM**" as LLM #E3F2FD {
+    ' Model: gpt-4o-2024-05-13
+    ' Temperature: 0.1
+    ' Max tokens: 4096
+    ' Top-p: 0.95
+  }
+  
+  rectangle "**Response Validation**" as Validation #FFF3E0 {
+    ' Groundedness check
+    ' Citation validation
+    ' Hallucination detection
+    ' Confidence scoring
+  }
+}
+
+package "Observability & Optimization" {
+  rectangle "**RAG Evaluation**" as Eval #E8F5E9 {
+    ' Context Precision
+    ' Context Recall
+    ' Answer Relevancy
+    ' Faithfulness
+  }
+  
+  rectangle "**Performance Metrics**" as Metrics #FCE4EC {
+    ' Retrieval latency (P95: 120ms)
+    ' Reranking latency (P95: 200ms)
+    ' Total RAG latency (P95: 3.2s)
+    ' Cache hit rate: 35%
+  }
+}
+
+' Flow
+Agent --> QueryAnalysis : "Does this patient meet\nMCG criteria for knee MRI?"
+
+QueryAnalysis --> Rewrite : Expand query
+
+Rewrite --> Router : Optimized query
+
+Router --> Vector : Parallel execution
+Router --> Keyword : Parallel execution
+Router --> KG : Parallel execution
+
+Vector --> Embed : Generate embeddings
+Embed --> Milvus : Search vectors
+Milvus --> Cosine : Top-K=100
+
+Keyword --> BM25 : Index search
+BM25 --> FTS : Top-K=100
+
+KG --> Neo4j : Graph query
+Neo4j --> Traversal : Multi-hop search
+
+Cosine --> Fusion : Vector results (100)
+FTS --> Fusion : Keyword results (100)
+Traversal --> Fusion : Graph results (50)
+
+Fusion --> Filter : Merged results (250)
+
+Filter --> Rerank : Filtered results (150)
+
+Rerank --> CrossEncoder : Precise scoring
+CrossEncoder --> Diversity : Top-K=50
+
+Diversity --> Compression : Top-K=10
+
+Compression --> Lingua : Compress
+Lingua --> ChunkOpt : Optimize chunks
+
+ChunkOpt --> Citation : Track sources
+
+Citation --> Prompt : Context + Citations
+
+Prompt --> LLM : Full prompt
+
+LLM --> Validation : Generated response
+
+Validation --> Agent : ✓ Validated answer\nwith citations
+
+Validation --> Eval : Continuous evaluation
+
+Eval --> Metrics : Performance tracking
+
+note right of QueryAnalysis
+  **Query Understanding:**
+  
+  Input: "Does this patient meet 
+  MCG criteria for knee MRI?"
+  
+  Parsed:
+  • Intent: Medical necessity check
+  • Entity: Knee MRI
+  • Guideline: MCG
+  • Context: Patient eligibility
+  
+  Expanded:
+  • Magnetic Resonance Imaging
+  • Knee joint imaging
+  • Musculoskeletal guidelines
+end note
+
+note right of Vector
+  **Vector Search Configuration:**
+  
+  **Collections:**
+  • clinical_guidelines: 5M vectors
+  • policy_documents: 2M vectors
+  • case_history: 10M vectors
+  
+  **Index:** HNSW
+  • M: 16 (connections per node)
+  • efConstruction: 200
+  • efSearch: 100
+  
+  **Performance:**
+  • Query latency: 80ms (P95)
+  • Recall@100: 0.92
+  • Precision@100: 0.78
+end note
+
+note right of Keyword
+  **BM25 Configuration:**
+  
+  **Elasticsearch Settings:**
+  • k1: 1.2 (term frequency)
+  • b: 0.75 (length normalization)
+  
+  **Field Boosting:**
+  • title: 3.0
+  • abstract: 2.0
+  • body: 1.0
+  • metadata: 0.5
+  
+  **Performance:**
+  • Query latency: 50ms (P95)
+  • Recall@100: 0.85
+end note
+
+note right of KG
+  **Knowledge Graph Schema:**
+  
+  **Nodes:**
+  • Disease (ICD-10)
+  • Procedure (CPT)
+  • Drug (NDC)
+  • Provider (NPI)
+  • Guideline
+  
+  **Relationships:**
+  • DIAGNOSED_WITH
+  • TREATS
+  • REQUIRES_PRIOR_AUTH
+  • CONTRAINDICATED_WITH
+  • COVERED_BY
+  
+  **Query Example:**
+  MATCH (p:Procedure {code: '73721'})
+    -[:REQUIRES_PRIOR_AUTH]->(g:Guideline)
+  RETURN g
+  
+  **Performance:**
+  • Query latency: 150ms (P95)
+  • Graph size: 500K nodes, 2M edges
+end note
+
+note right of Fusion
+  **Reciprocal Rank Fusion:**
+  
+  RRF(d) = Σ (1 / (k + rank_i(d)))
+  
+  where:
+  • k = 60 (constant)
+  • rank_i(d) = rank of document d 
+                in retrieval system i
+  
+  **Example:**
+  • Vector rank: 5 → 1/(60+5) = 0.0154
+  • BM25 rank: 3 → 1/(60+3) = 0.0159
+  • Graph rank: 10 → 1/(60+10) = 0.0143
+  • Total: 0.0456
+  
+  **Advantages:**
+  • No score normalization needed
+  • Robust to different scales
+  • Handles missing results gracefully
+end note
+
+note right of Rerank
+  **Cross-Encoder Reranking:**
+  
+  **Model:** ms-marco-MiniLM-L-6-v2
+  
+  **Input:** [query, document] pairs
+  
+  **Output:** Relevance score (0-1)
+  
+  **Benefits:**
+  • More accurate than bi-encoder
+  • Considers query-doc interaction
+  • Reorders top-K candidates
+  
+  **Performance:**
+  • Latency: 200ms for 50 pairs
+  • NDCG@10 improvement: +15%
+  
+  **Diversity (MMR):**
+  λ = 0.7 (relevance weight)
+  1-λ = 0.3 (diversity weight)
+end note
+
+note right of Compression
+  **Context Compression:**
+  
+  **Before LLMLingua:**
+  Context: 8,000 tokens
+  
+  **After LLMLingua:**
+  Context: 4,000 tokens (50% reduction)
+  
+  **Benefits:**
+  • Reduced LLM cost
+  • Faster inference
+  • Fits in context window
+  • Preserves key information
+  
+  **Semantic Chunking:**
+  • Chunk size: 512 tokens
+  • Overlap: 100 tokens (20%)
+  • Strategy: Sentence-aware
+end note
+
+note right of LLM
+  **Prompt Template:**
+  
+  You are a clinical review assistant.
+  
+  Use ONLY the following context to answer:
+  
+  <context>
+  [Retrieved MCG guidelines]
+  [Policy documents]
+  [Case precedents]
+  </context>
+  
+  Citations: [doc_id, page]
+  
+  Question: {user_query}
+  
+  Answer with:
+  1. Yes/No decision
+  2. Rationale (cite sources)
+  3. Confidence score
+  4. Guidelines referenced
+  
+  If uncertain, say "Insufficient information"
+  Do NOT hallucinate or invent guidelines.
+end note
+
+note right of Validation
+  **Response Validation Checks:**
+  
+  ✓ **Groundedness:**
+  All claims supported by context?
+  Score: 0-1
+  
+  ✓ **Citation Accuracy:**
+  All citations valid?
+  All sources traceable?
+  
+  ✓ **Hallucination Detection:**
+  Any invented information?
+  Confidence threshold: 0.9
+  
+  ✓ **Answer Relevancy:**
+  Addresses the question?
+  Relevance score: 0-1
+  
+  **Action if validation fails:**
+  • Log issue
+  • Return error
+  • Escalate to human
+end note
+
+note right of Eval
+  **Continuous RAG Evaluation:**
+  
+  **Metrics (RAGAS Framework):**
+  
+  • Context Precision: 0.89
+    (% relevant docs retrieved)
+  
+  • Context Recall: 0.92
+    (% ground truth in context)
+  
+  • Answer Relevancy: 0.94
+    (answer addresses question)
+  
+  • Faithfulness: 0.96
+    (answer grounded in context)
+  
+  **Human Eval (Weekly):**
+  • 100 random samples
+  • Expert clinical review
+  • Ground truth comparison
+end note
+
+@enduml

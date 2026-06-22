@@ -1,0 +1,106 @@
+@startuml
+!theme plain
+title Complete Load Test Performance Metrics - Before vs After Optimization
+
+scale 0.8
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam roundcorner 5
+skinparam padding 10
+
+rectangle "BASELINE METRICS (Current State)" as Baseline #FFE6E6 {
+  card "Kong Gateway" {
+    rectangle "p50: 42ms" as KB_p50
+    rectangle "p95: 185ms ⚠" as KB_p95
+    rectangle "p99: 450ms" as KB_p99
+    rectangle "Throughput: 150 req/sec" as KB_TP
+  }
+  
+  card "OPA Policy Engine" {
+    rectangle "Decision Time (p95): 48ms ⚠" as OPA_B
+    rectangle "Decisions/sec: 225" as OPA_TP
+    rectangle "No Caching" as OPA_Cache
+  }
+  
+  card "Ollama GPU" {
+    rectangle "Inference (p95): 980ms" as GPU_B
+    rectangle "Throughput: 1.5 req/sec" as GPU_TP
+    rectangle "GPU Util: 72%" as GPU_Util
+  }
+  
+  card "End-to-End" {
+    rectangle "PA Completion: 14.2 min" as E2E_B
+    rectangle "Error Rate: 0.08%" as E2E_ER
+  }
+}
+
+rectangle "POST-OPTIMIZATION (Target State)" as Optimized #E6FFE6 {
+  card "Kong Gateway" {
+    rectangle "p50: 25ms ✓" as KO_p50
+    rectangle "p95: 95ms ✓ (-49%)" as KO_p95
+    rectangle "p99: 200ms ✓ (-56%)" as KO_p99
+    rectangle "Throughput: 320 req/sec ✓ (+113%)" as KO_TP
+  }
+  
+  card "OPA Policy Engine" {
+    rectangle "Decision Time (p95): 18ms ✓ (-62%)" as OPA_O
+    rectangle "Decisions/sec: 450 ✓ (+100%)" as OPA_TP_O
+    rectangle "Cache Hit: 85%" as OPA_Cache_O
+  }
+  
+  card "Ollama GPU" {
+    rectangle "Inference (p95): 620ms ✓ (-37%)" as GPU_O
+    rectangle "Throughput: 3.8 req/sec ✓ (+153%)" as GPU_TP_O
+    rectangle "GPU Util: 85% ✓" as GPU_Util_O
+  }
+  
+  card "End-to-End" {
+    rectangle "PA Completion: 11.5 min ✓ (-19%)" as E2E_O
+    rectangle "Error Rate: <0.05% ✓" as E2E_ER_O
+  }
+}
+
+baseline -[hidden]- optimized
+
+rectangle "RESOURCE UTILIZATION IMPACT" as Resources #E6F0FF {
+  card "CPU Usage" {
+    rectangle "Before: 45% per core" as CPU_B
+    rectangle "After: 35% per core (-22%)" as CPU_O
+  }
+  
+  card "Memory Usage" {
+    rectangle "Before: 87GB GPU (OOM)" as Mem_B
+    rectangle "After: 30GB GPU (66% savings)" as Mem_O
+  }
+  
+  card "Network" {
+    rectangle "Before: 95% link util" as Net_B
+    rectangle "After: 45% link util (improved)" as Net_O
+  }
+}
+
+resources -[hidden]- baseline
+
+rectangle "CUMULATIVE IMPROVEMENTS" as Summary #F0E6FF {
+  card "Latency" {
+    rectangle "Kong: -49% (p95)" as L1
+    rectangle "OPA: -62% (p95)" as L2
+    rectangle "Ollama: -37% (p95)" as L3
+    rectangle "Avg Latency Reduction: -49%" as L_Avg
+  }
+  
+  card "Throughput" {
+    rectangle "Kong: +113%" as T1
+    rectangle "OPA: +100%" as T2
+    rectangle "Ollama: +153%" as T3
+    rectangle "System Throughput: +2.1x" as T_Avg
+  }
+  
+  card "Resource Efficiency" {
+    rectangle "GPU Memory: -66%" as R1
+    rectangle "CPU: -22%" as R2
+    rectangle "Cost Reduction: ~25%" as R3
+  }
+}
+
+@enduml
